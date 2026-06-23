@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AI Readiness Cheatsheets — ZAP IT</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.role-report{border:2px solid var(--border);border-top:4px solid var(--cyan);border-radius:8px;padding:24px;margin:16px 0}.tab-wrap{margin-top:4px}
+.q-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px 24px;margin-top:16px}
+@media(max-width:768px){.q-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="brand">ZAP<em>IT</em></a>
+  <div class="topbar-right"><a href="index.html" class="tbtn">← All Agents</a></div>
+</div>
+<div class="wrap">
+  <div class="agent-hdr">
+    <div class="step-tag">AGENT 06 · AI READINESS</div>
+    <div class="title-row"><div class="agent-ico">&#129302;</div><div><h1>AI Readiness Cheatsheets</h1></div></div>
+    <div class="agent-desc">A prebuilt AI-readiness pack — assume you know nothing about AI today and walk out ready. Standard AI report for everyone, a role-specific AI toolkit, emerging trends, courses & certs with links and ratings, plus a quick self-score. Built to download and keep as a reference.</div>
+  </div>
+  <div class="agent-info" id="info"></div>
+  <div class="config-panel">
+    <div class="config-panel-title"><span>&#9881;</span> Step 1 — Select the Role <span class="rolecount" data-rolecount style="margin-left:8px">none selected</span></div>
+    <div class="step-note">Pick your role, then answer the 5 AI-readiness questions in Step 2.</div>
+    <div id="carryBanner"></div>
+    <div class="role-grid" id="roleGrid"></div>
+    <div class="q-grid">
+      <div class="qgrp"><div class="ql">1 → Have you used an AI tool (Copilot, ChatGPT&) in real work?</div><div class="copts" id="g_a1"><div class="copt active" data-yes="1">Yes</div><div class="copt">No / not sure</div></div></div>
+      <div class="qgrp"><div class="ql">2 → Have you built anything with an LLM / RAG, however small?</div><div class="copts" id="g_a2"><div class="copt active" data-yes="1">Yes</div><div class="copt">No / not sure</div></div></div>
+      <div class="qgrp"><div class="ql">3 → Can you explain where AI helps vs where it shouldn’t be trusted?</div><div class="copts" id="g_a3"><div class="copt active" data-yes="1">Yes</div><div class="copt">No / not sure</div></div></div>
+      <div class="qgrp"><div class="ql">4 → Is AI shown on your resume with a concrete example?</div><div class="copts" id="g_a4"><div class="copt active" data-yes="1">Yes</div><div class="copt">No / not sure</div></div></div>
+      <div class="qgrp"><div class="ql">5 → Do you keep up with AI basics (not hype)?</div><div class="copts" id="g_a5"><div class="copt active" data-yes="1">Yes</div><div class="copt">No / not sure</div></div></div>
+    </div>
+    <button class="run-btn" id="run-btn">&#9889; Check My AI Readiness</button>
+    <div class="run-note">Runs fully offline — no API key, no internet.</div>
+  </div>
+  <div class="report-wrap" id="report-wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      <button class="dl-btn" id="dl-btn">&#11015; Download (.txt)</button>
+      <button class="nfbtn" onclick="window.print()">&#128424; Print</button>
+    </div>
+    <div id="reports-container"></div>
+  </div>
+  <div class="nav-footer">
+    <a class="nfbtn" href="index.html">← All Agents</a>
+    <a class="nfbtn primary" href="07_interview.html">Next: Interview Pocket Book &rarr;</a>
+  </div>
+</div>
+<script src="_engine.js"></script>
+<script src="_skills.js"></script>
+<script>
+/* Agent 8 — AI Readiness Analyzer. */
+function yesCount(ids){return ids.map(function(id){var e=document.querySelector('#'+id+' .copt.active');return e&&e.dataset.yes==='1'?1:0;}).reduce(function(a,b){return a+b;},0);}
+var TRENDS=[
+  ["Roles mentioning AI/LLM skills","→ rising sharply","up"],
+  ["'AI-aware' as a screening filter","→ now common at Tier 2","up"],
+  ["RAG / vector-DB experience asked for","→ rising","up"],
+  ["Prompt-only 'AI roles' (no fundamentals)","→ being filtered out","down"],
+  ["Pure manual workflows (no AI leverage)","→ declining","down"]
+];
+var WANT=["Used at least one AI tool in real work (Copilot, ChatGPT, etc.)","Built something with an LLM/RAG, however small","Can explain where AI helps vs where it shouldn't be trusted","Shows AI on the resume with a concrete example","Keeps up with what's new (basic awareness, not hype)"];
+var LEARN=[
+  ["Foundations","Understand what LLMs are, tokens, prompting basics","DeepLearning.AI short courses (free)"],
+  ["Hands-on","Build 1 small RAG app over your own notes","LangChain / LlamaIndex quickstart"],
+  ["Apply","Add an AI feature to an existing project","Your own GitHub"],
+  ["Signal","List AI tools + the project on resume + LinkedIn","—"]
+];
+/* EMERGING TRENDS — beyond the basics (feedback: emerging trends) */
+var EMERGING=[
+  ["AI agents & tool-use","Apps that take actions, not just chat","→ hot"],
+  ["RAG over company data","Answering from private docs","→ standard now"],
+  ["Small / on-device models","Cheaper, private inference","→ rising"],
+  ["AI coding assistants (Copilot/Cursor)","Expected day-1 skill","→ mainstream"],
+  ["Prompt + eval discipline","Measuring AI quality, not vibes","→ rising"],
+  ["Multimodal (image+text+voice)","One model, many inputs","→ rising"]
+];
+/* COURSES & CERTS with rating + link (feedback: give links + ratings) */
+var AI_CERTS=[
+  {n:"DeepLearning.AI — ChatGPT Prompt Engineering",r:5,note:"Free → do this first",u:"https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/"},
+  {n:"DeepLearning.AI — LangChain for LLM Apps",r:5,note:"Free → build a RAG app",u:"https://www.deeplearning.ai/short-courses/"},
+  {n:"Google — Generative AI Learning Path",r:4,note:"Free → broad foundation",u:"https://www.cloudskillsboost.google/paths/118"},
+  {n:"Microsoft — Generative AI for Beginners",r:4,note:"Free → hands-on GitHub course",u:"https://microsoft.github.io/generative-ai-for-beginners/"},
+  {n:"Hugging Face — NLP / LLM Course",r:4,note:"Free → deeper hands-on",u:"https://huggingface.co/learn"},
+  {n:"AWS / Azure AI fundamentals cert",r:3,note:"Paid → good resume keyword",u:"https://learn.microsoft.com/en-us/credentials/certifications/azure-ai-fundamentals/"}
+];
+/* role-specific AI toolkit */
+function aiToolkit(role){
+  var generic=[["ChatGPT / Claude","Daily driver for drafting, explaining, debugging"],["GitHub Copilot / Cursor","AI pair-programmer in your editor"],["A RAG / vector tool","Answer questions from your own docs"]];
+  var byRole={
+    "Data Analyst":[["AI in SQL / spreadsheets","Generate queries & summaries"],["Python + pandas-ai","Chat with your data"]],
+    "Data Scientist":[["Hugging Face models","Pretrained models to fine-tune"],["LangChain / LlamaIndex","Build LLM pipelines"]],
+    "ML / AI Eng":[["PyTorch + Hugging Face","Train & serve models"],["Vector DBs (FAISS/Pinecone)","Retrieval for RAG"]],
+    "Frontend Dev":[["Vercel AI SDK","Add AI chat to web apps"],["v0 / UI copilots","AI-assisted UI building"]],
+    "Backend Dev":[["LLM APIs (OpenAI/Anthropic)","Wrap models behind your API"],["LangChain","Orchestrate AI calls"]],
+    "Digital Marketing":[["AI copy + image tools","Generate & test creative fast"],["Analytics copilots","Faster reporting"]]
+  };
+  var rows=(byRole[role]||[]).concat(generic);
+  return '<h3 class="sub" style="margin-top:14px">▶ Your AI Toolkit for '+ZAP.esc(role)+' <span class="htip">the AI tools to actually pick up for this role</span></h3>'+
+    '<ul class="checklist">'+rows.map(function(t){return '<li><span class="chk"></span><span><b>'+ZAP.esc(t[0])+'</b> — '+ZAP.esc(t[1])+'</span></li>';}).join('')+'</ul>';
+}
+var AGENT={
+  unit:'role', dlname:'zapit_ai_readiness.txt',
+  info:{
+    what:"Answers the question every student is anxious about in 2025: is my profile AI-ready? It scores your AI readiness, shows what's missing, what the market wants, and what to learn.",
+    why:"AI-awareness is now a hiring filter, not a bonus. Students don't know if they're behind or what to add. This makes it concrete.",
+    features:["AI-readiness score from a 5-point self-check","What's missing, specifically","Market trends — what's rising vs filtered out","What companies look for in an AI-aware fresher","A short, ordered learn-and-add plan"],
+    examples:["No AI tools used + no AI project → 'at risk', clear plan","Used Copilot + one RAG demo → 'getting there'","Resume shows AI project → 'ready', keep it visible"]
+  },
+  selector:{type:'roles',multi:false,allLabel:'All Roles'},
+  report:function(roles){
+    var y=yesCount(['g_a1','g_a2','g_a3','g_a4','g_a5']);
+    var anyAns=document.querySelector('.copt.active');
+    var c=document.getElementById('reports-container');
+    var score=y*20;
+    var band=score>=80?['READY','demand','success-box']:score>=40?['GETTING THERE','pos','wow']:['AT RISK','supply','risk'];
+    var role=roles[0]||'your role';
+    
+    // Bento Snapshot components
+    var hcls=score>=80?'vh-green':score>=40?'vh-amber':'vh-red';
+    var verdict = '<div class="verdict-col">' +
+      '<div class="verdict-hero ' + hcls + '">' +
+        '<div class="vh-lbl">AI READINESS</div>' +
+        '<div class="vh-val">' + score + '%</div>' +
+        '<div class="vh-sub">' + (score>=80?'READY — keep one AI project front &amp; centre':score>=40?'GETTING THERE — thin signal':'AT RISK — high-leverage gap') + '</div>' +
+      '</div>' +
+    '</div>';
+    
+    var kpis = ZAP.kpiRow([
+      {lbl:'AI CHECKS PASSED', val:y+' / 5', sub:'yes answers', cls:'demand'},
+      {lbl:'TOOLKIT ITEMS', val:'5+ Tools', sub:'role specific tools', cls:'pos'},
+      {lbl:'COURSES READY', val:AI_CERTS.length+' courses', sub:'free + rated', cls:'trend'},
+      {lbl:'PREP PLAN', val:'3 Steps', sub:'ordered modules', cls:'violet'}
+    ]);
+    
+    var beginner = '<div class="beginner" style="margin:0"><div class="bg-tag">▶ NEW TO AI? START HERE</div><p><b>AI / LLM</b> = software that reads &amp; writes like a human. <b>RAG</b> = making AI answer from <i>your private docs</i>. <b>Prompt</b> = instructions you give it. Learn these to clear filters.</p></div>';
+    var bento = '<div class="bento-snapshot">' + verdict + '<div class="data-col">' + kpis + beginner + '</div></div>';
+
+    var id = role.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
+    var deepDive = '<div class="deep-dive">' +
+      '<aside class="sidebar-nav">' +
+        '<button class="s-tab active" onclick="switchSTab(this, \''+id+'-toolkit\')">🛠️ AI Toolkit</button>' +
+        '<button class="s-tab" onclick="switchSTab(this, \''+id+'-checklist\')">📋 Gaps &amp; Checklist</button>' +
+        '<button class="s-tab" onclick="switchSTab(this, \''+id+'-trends\')">📈 Market &amp; Emerging Trends</button>' +
+        '<button class="s-tab" onclick="switchSTab(this, \''+id+'-courses\')">🎓 Courses &amp; Certs</button>' +
+        '<button class="s-tab" onclick="switchSTab(this, \''+id+'-plan\')">📅 Learn &amp; Add Plan</button>' +
+      '</aside>' +
+      '<div class="sidebar-content">' +
+        '<div class="s-panel active" id="'+id+'-toolkit">' +
+          aiToolkit(role) +
+        '</div>' +
+        '<div class="s-panel" id="'+id+'-checklist">' +
+          '<h3 class="sub" style="margin-top:0">What Companies Want <span class="htip">the standard AI-aware checklist</span></h3><ul class="checklist">'+WANT.map(function(w){return '<li><span class="chk"></span><span>'+ZAP.esc(w)+'</span></li>';}).join('')+'</ul>' +
+        '</div>' +
+        '<div class="s-panel" id="'+id+'-trends">' +
+          '<h3 class="sub" style="margin-top:0">Market Trends '+ZAP.indic('Indicative')+'</h3><table class="t"><thead><tr><th>SIGNAL</th><th>DIRECTION</th></tr></thead><tbody>'+TRENDS.map(function(t){var col=t[2]==='up'?'var(--emerald)':'var(--crimson)';return '<tr><td><b>'+ZAP.esc(t[0])+'</b></td><td style="color:'+col+';font-weight:700">'+ZAP.esc(t[1])+'</td></tr>';}).join('')+'</tbody></table>' +
+          '<h3 class="sub" style="margin-top:20px">▶ Emerging AI Trends <span class="htip">what\'s next — learn ahead of the curve</span></h3><table class="t"><thead><tr><th>TREND</th><th>WHAT IT MEANS</th><th class="c">SIGNAL</th></tr></thead><tbody>'+EMERGING.map(function(t){return '<tr><td><b>'+ZAP.esc(t[0])+'</b></td><td>'+ZAP.esc(t[1])+'</td><td class="c" style="color:var(--emerald);font-weight:700">'+ZAP.esc(t[2])+'</td></tr>';}).join('')+'</tbody></table>' +
+        '</div>' +
+        '<div class="s-panel" id="'+id+'-courses">' +
+          '<h3 class="sub" style="margin-top:0">▶ Courses &amp; Certs <span class="htip">tap to open → — free ones first, rated by value</span></h3><div class="bar-wrap" style="padding:4px 0">'+AI_CERTS.map(function(x){return ZAP.skillLine({n:x.n,r:x.r,note:x.note},{prof:false});}).join('')+'</div>' +
+        '</div>' +
+        '<div class="s-panel" id="'+id+'-plan">' +
+          '<h3 class="sub" style="margin-top:0">Your Learn &amp; Add Plan</h3><div class="tl3">'+LEARN.map(function(l,i){var cls=['d30','d60','d90','d30'][i];return '<div class="tl3-col"><div class="tl3-head '+cls+'">'+ZAP.esc(l[0])+'</div><div class="tl3-body"><div class="tl3-item">'+ZAP.esc(l[1])+'</div><div class="tl3-item" style="color:var(--slate-light)">'+ZAP.esc(l[2])+'</div></div></div>';}).join('')+'</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+    var html='<div class="step-note">AI readiness for '+ZAP.esc(role)+' &nbsp; '+ZAP.indic('Self-assessment + indicative market trends')+'</div>';
+    html+=bento+deepDive;
+    var TK=['You answered <b>'+y+' of 5</b> AI-readiness checks "yes".','AI-awareness is now a <b>screening filter</b>, not a bonus — close the unticked items.','One <b>small real AI project</b> beats any "familiar with AI" line.'];
+    var leadAI = score>=80?[{t:'You\'re AI-ready ('+score+'%) — now make it visible',b:'Keep one AI project at the top of your resume and GitHub. Your edge is only useful if a recruiter sees it in 10 seconds.'}]:[{t:'Close your AI gap: build one small AI project this month',b:'You scored '+score+'%. A tiny RAG app or AI-assisted feature, listed with the tools used, moves you from "buzzword" to "evidence" fast.'}];
+    html+=ZAP.closeout(leadAI.concat(RECS), {href:'05_resumekit.html',label:'Agent 05 · Resume Kit',desc:'Get your AI signal onto your resume — the kit shows you where it goes.'}, TK);
+    c.innerHTML=html;
+  }
+};
+window.switchSTab=function(btn,id){
+  var nav=btn.parentNode;
+  var content=nav.nextElementSibling;
+  nav.querySelectorAll('.s-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  content.querySelectorAll('.s-panel').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById(id); if(t) t.classList.add('active');
+};
+var RECS=[
+  {t:"Close the biggest gaps from the checklist first",b:"Whichever 'what companies want' items are unticked are your fastest wins. Start there."},
+  {t:"Build one small but real AI project and show it",b:"A tiny RAG app or AI-assisted feature beats any 'familiar with AI' line. Make it visible on GitHub + resume."},
+  {t:"Pair AI with your role fundamentals — not instead of them",b:"Companies want AI-aware engineers, not prompt operators. Keep your core role skills strong alongside AI."}
+];
+
+/* ---- standard boot (identical across agents) ---- */
+(function(){
+  if(AGENT.info) ZAP.mountInfo('info', AGENT.info);
+  var s=AGENT.selector||{type:'roles',multi:true};
+  // chaining: restore role selection carried from a previous role-based agent
+  var restore=[];
+  if(s.type==='roles'){ var saved=ZAP.recall('roles'); if(saved&&saved.length){ restore=saved; ZAP.carryBanner('carryBanner', saved); } }
+  if(s.type==='roles') ZAP.mountRoles('roleGrid', {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel, restore:restore});
+  else ZAP.mountChips('roleGrid', s.items||[], {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel});
+  // prefill resume textarea if one exists and we have remembered resume text
+  var rt=document.getElementById('resumeText'); var savedResume=ZAP.recall('resume');
+  if(rt&&savedResume&&!rt.value) rt.value=savedResume;
+  // copt (Step 2) selection
+  document.addEventListener('click', function(e){
+    var o=e.target.closest && e.target.closest('.copt');
+    if(o){ var g=o.parentNode; g.querySelectorAll('.copt').forEach(function(x){x.classList.remove('active');}); o.classList.add('active'); }
+  });
+  window.optVal=function(id){ var e=document.querySelector('#'+id+' .copt.active'); return e?e.textContent.trim():''; };
+  function run(){
+    var sel=ZAP.selected('roleGrid');
+    if(!sel.length){ alert('Please select at least one '+(AGENT.unit||'role')+' first.'); return; }
+    // chaining: remember role selection + any resume text for the next agent
+    if(s.type==='roles'){ ZAP.remember('roles', sel); ZAP.remember('role', sel[0]); }
+    var rtx=document.getElementById('resumeText'); if(rtx&&rtx.value&&rtx.value.replace(/\s/g,'').length>40) ZAP.remember('resume', rtx.value);
+    ZAP.showReport();
+    AGENT.report(sel);
+    var dl=document.getElementById('dl-btn');
+    if(dl) dl.onclick=function(){ ZAP.download(AGENT.dlname||'zapit_report.txt', AGENT.dltext?AGENT.dltext(sel):JSON.stringify(sel)); };
+  }
+  document.getElementById('run-btn').addEventListener('click', run);
+})();
+</script>
+</body>
+</html>

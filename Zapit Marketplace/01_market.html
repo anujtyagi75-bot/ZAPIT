@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Market Demand Intelligence — ZAP IT</title>
+<link rel="stylesheet" href="_shared.css">
+<style>.role-report{border:2px solid var(--border);border-top:4px solid var(--cyan);border-radius:8px;padding:24px;margin:16px 0}.tab-wrap{margin-top:4px}</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="brand">ZAP<em>IT</em></a>
+  <div class="topbar-right"><a href="index.html" class="tbtn">← All Agents</a></div>
+</div>
+<div class="wrap">
+  <div class="agent-hdr">
+    <div class="step-tag">AGENT 01 · MARKET</div>
+    <div class="title-row"><div class="agent-ico">📊</div><div><h1>Market Demand Intelligence</h1></div></div>
+    <div class="agent-desc">Seven reads on the fresher market: hot-skills demand, entry-level hiring pulse, top recruiters, salary benchmarks, location heatmap, a 6-month forecast and a "should I learn X?" skill-ROI check — across all 18 roles.</div>
+  </div>
+  <div class="agent-info" id="info"></div>
+  <div class="config-panel">
+    <div class="config-panel-title"><span>&#9881;</span> Step 1 — Select Role(s) <span class="rolecount" data-rolecount style="margin-left:8px">none selected</span></div>
+    <div class="step-note">Pick one, several, or "All Roles". Hover a role to see what the job involves.</div>
+    <div id="carryBanner"></div>
+    <div class="role-grid" id="roleGrid"></div>
+    <div class="config-grid" style="margin-top:16px">
+  <div class="cgrp"><label>&#128205; City (context)</label><div class="copts" id="g_city"><div class="copt active">All cities</div><div class="copt">Bengaluru</div><div class="copt">Hyderabad</div><div class="copt">Pune</div><div class="copt">NCR / Delhi</div><div class="copt">Mumbai</div><div class="copt">Chennai</div></div></div>
+  <div class="cgrp"><label>&#127891; Experience (context)</label><div class="copts" id="g_exp"><div class="copt active">All levels</div><div class="copt">Final-year student</div><div class="copt">Fresher (0-1y)</div><div class="copt">1-3 years</div></div></div>
+</div>
+    <button class="run-btn" id="run-btn">⚡ Generate Market Intelligence Report</button>
+    <div class="run-note">Runs fully offline — no API key, no internet.</div>
+  </div>
+  <div class="report-wrap" id="report-wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      <button class="dl-btn" id="dl-btn">&#11015; Download (.txt)</button>
+      <button class="nfbtn" onclick="window.print()">&#128424; Print</button>
+    </div>
+    <div id="reports-container"></div>
+  </div>
+  <div class="nav-footer">
+    <a class="nfbtn" href="index.html">← All Agents</a>
+    <a class="nfbtn primary" href="02_matrix.html">Next: Skill Matrix →</a>
+  </div>
+</div>
+<script src="_engine.js"></script>
+<script src="_skills.js"></script>
+<script>
+var AGENT = {
+  unit:'role', dlname:'zapit_market_intelligence.txt',
+  info:{
+    what:"A live-style read on India's tech hiring market for each role — demand vs supply, where the jobs actually are, what skills move salary, and realistic pay bands.",
+    why:"Most students prepare for the wrong slice of the market (FAANG) and the wrong salary band. This shows where the real volume and money are so you aim correctly.",
+    features:["Hot Skills Demand — top 20 skills freshers are hired for, with 6-month trend arrows","Entry-Level Hiring Pulse — how hot or cold the market is right now (by month, role & city)","Top Recruiting Companies — who's actively hiring 0–2 year candidates this quarter","Salary Benchmark — what freshers actually earn across roles and cities (not what LinkedIn says)","Location Heatmap — where the highest concentration of IT jobs are in India","6-Month Demand Forecast — which skills and roles are rising or declining, ahead of the curve","Skill ROI · 'Should I Learn X?' — demand vs competition vs salary uplift for every skill"],
+    examples:["Frontend Dev: 70% of jobs are generalist ₹3–4L — not the ₹12L+ FAANG band most students target","Data Engineer has 12:1 competition — far easier to enter than Data Analyst at 44:1","ML/AI Engineering demand is up +52% QoQ — the fastest-rising role in India's tech market right now"]
+  },
+  selector:{type:'roles',multi:true},
+  report:function(roles){
+    var city=optVal('g_city'), exp=optVal('g_exp');
+    var c=document.getElementById('reports-container');
+    /* context note + glossary */
+    var html='<div class="step-note">Context: '+(city||'All cities')+' · '+(exp||'All levels')+' &nbsp; '+ZAP.indic('Indicative market data')+'</div>';
+    html+=ZAP.guideBox(false);
+    /* glance bar — also sets window.__TK used by closeout */
+    html+=glance1(roles);
+    /* â”€â”€ Two-tab nav â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    var roleLabel=roles.length===1?'📋 My Role: '+ZAP.esc(roles[0]):'📋 My Roles ('+roles.length+')';
+    html+='<div class="report-tab-nav">';
+    html+='<button class="rtab active" id="rtab-role" onclick="switchReportTab(\'role\')">'+roleLabel+'</button>';
+    html+='<button class="rtab" id="rtab-market" onclick="switchReportTab(\'market\')">🌍 Market Overview</button>';
+    html+='</div>';
+    /* â”€â”€ My Role panel (default active) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    html+='<div class="report-panel" id="rpanel-role">';
+    if(roles.length===1){
+      var d=ZAP.MARKET[roles[0]]; if(d) html+=renderRole(roles[0],d);
+    } else {
+      html+='<div class="report-sub-tabs">';
+      roles.forEach(function(rn,i){
+        html+='<button class="rsub'+(i===0?' active':'')+'" onclick="switchRoleTab('+i+')">'+ZAP.esc(rn)+'</button>';
+      });
+      html+='</div>';
+      roles.forEach(function(rn,i){
+        var d=ZAP.MARKET[rn];
+        html+='<div class="role-panel'+(i===0?' active':'')+'" id="rp-'+i+'">';
+        if(d) html+=renderRole(rn,d);
+        html+='</div>';
+      });
+    }
+    html+='</div>';
+    /* â”€â”€ Market Overview panel (hidden by default) â”€â”€ */
+    html+='<div class="report-panel hidden" id="rpanel-market">';
+
+    html+=sevenReports(roles,city);
+    html+='</div>';
+    /* â”€â”€ Recommendations + takeaways always below both tabs â”€â”€ */
+    html+=ZAP.closeout(leadRec1(roles).concat(RECS),{href:'02_matrix.html',label:'Agent 02 · Role Skill Matrix',desc:'You know the market — now see exactly which skills to learn, in order. Your role carries over.'},window.__TK);
+    c.innerHTML=html;
+  },
+  dltext:function(roles){
+    var t='ZAP IT — Market Intelligence\n'+'='.repeat(46)+'\n\n';
+    roles.forEach(function(rn){ var d=ZAP.MARKET[rn]; if(!d) return;
+      t+=rn+'\n'+'-'.repeat(38)+'\n';
+      t+='Demand '+d.demand+' | Supply '+d.supply+' | Position '+d.position+'\n';
+      t+='Listings '+d.listings+' | Candidates '+d.supplyN+' | Ratio '+d.ratio+'\n';
+      t+='Tier1 '+d.t1.salary+' | Tier2 '+d.t2.salary+' | Tier3 '+d.t3.salary+'\n';
+      t+='Multipliers: '+d.matrix.mult.join(', ')+'\n\n';
+    });
+    return t;
+  }
+};
+/* ===== Market-wide datasets for the 7 named reports (indicative) ===== */
+var HOT_SKILLS=[
+ ["GenAI / LLM apps (RAG)",98,61],["Python",95,31],["Cloud — AWS",93,34],["React + TypeScript",90,41],
+ ["SQL (advanced)",88,29],["Data Engineering (Spark/dbt)",86,48],["Kubernetes + Docker",84,38],
+ ["Java + Spring Boot",82,12],["Node.js / REST APIs",80,24],["Cybersecurity / Cloud Sec",79,47],
+ ["Machine Learning (sklearn)",77,18],["Power BI / Tableau",74,21],["DevOps / CI-CD",73,32],
+ ["Go (Golang)",70,46],["Playwright / SDET",68,58],["Terraform / IaC",66,34],
+ ["Pandas / Data Analysis",64,27],["Flutter / Mobile",58,18],["Product / Metrics sense",55,28],
+ ["System Design basics",52,26]
+];
+var CITY_DEMAND=[
+ ["Bengaluru",28,1.15],["Hyderabad",18,1.05],["Pune",14,1.00],["NCR / Delhi",13,1.05],
+ ["Chennai",10,0.95],["Mumbai",9,1.10],["Kolkata",4,0.85],["Other Tier-2",4,0.82]
+];
+var PULSE=[["Jan",78],["Feb",82],["Mar",88],["Apr",91],["May",96],["Jun",100]];
+var RECRUITERS=[
+ ["TCS","Service / IT","Very High","Dev, QA, Support, BA","₹3.4–4.5L"],
+ ["Infosys","Service / IT","Very High","Dev, Data, Cloud, BA","₹3.6–4.5L"],
+ ["Accenture","Consulting / IT","Very High","Dev, Cloud, Security","₹4.0–6.5L"],
+ ["Cognizant","Service / IT","High","Dev, Data, QA","₹3.5–5.0L"],
+ ["Wipro","Service / IT","High","Dev, Cloud, Support","₹3.5–4.8L"],
+ ["Capgemini","Service / IT","High","Dev, Data, Cloud","₹3.8–5.0L"],
+ ["GCCs (Target, Wells Fargo, etc.)","GCC / Global","High","Dev, Data, DevOps","₹6–14L"],
+ ["Amazon / Microsoft","Product / Global","Medium","SDE, Data, Cloud","₹12–28L"],
+ ["Razorpay · CRED · Zerodha","Product / Startup","Medium","Dev, Data, SDET","₹6–12L"]
+];
+function parseBand(amt){ var m=(amt||'').replace(/[₹L]/g,'').match(/([\d.]+)\D+([\d.]+)/); return m?[parseFloat(m[1]),parseFloat(m[2])]:null; }
+function fmtBand(lo,hi){ function r(x){return Math.round(x*10)/10;} return '₹'+r(lo)+'–'+r(hi)+'L'; }
+function ratioNum(r){ var m=(r||'').match(/(\d+)/); return m?+m[1]:999; }
+function glance1(roles){
+  var rows=roles.map(function(rn){return {rn:rn,d:ZAP.MARKET[rn]};}).filter(function(x){return x.d;});
+  if(!rows.length) return '';
+  var primary=rows[0].d;
+  var easiest=rows.slice().sort(function(a,b){return ratioNum(a.d.ratio)-ratioNum(b.d.ratio);})[0];
+  var cells=[
+    {l:'ROLES IN VIEW',v:roles.length,s:roles.slice(0,3).join(', ')+(roles.length>3?'…':'')},
+    {l:'TOP DEMAND',v:primary.demand,s:primary.demandSub},
+    {l:'FRESHER BAND',v:primary.bands.basic.amt,s:'basic tier · '+primary.bands.basic.share},
+    {l:'LOOSEST ENTRY',v:easiest?easiest.rn:'—',s:easiest?easiest.d.ratio+' competition':''}
+  ];
+  var glance='<div class="glance">'+cells.map(function(c){return '<div class="g-cell"><div class="g-lbl">'+c.l+'</div><div class="g-val">'+ZAP.esc(''+c.v)+'</div><div class="g-sub">'+ZAP.esc(c.s)+'</div></div>';}).join('')+'</div>';
+  var mult=primary.matrix.mult.slice(0,2).join(', ');
+  window.__TK=[
+    'Most openings sit in the <b>basic band</b> ('+ZAP.esc(primary.bands.basic.amt)+') — plan for volume, not outliers.',
+    'Invest in <b>multiplier skills</b> ('+ZAP.esc(mult)+') to move up a salary band.',
+    'Switch to <b>Market Overview</b> for the 7 cross-role reports (hot skills, recruiters, forecast).'
+  ];
+  return glance;
+}
+function leadRec1(roles){
+  var d=ZAP.MARKET[roles[0]]; if(!d) return [];
+  var mult=d.matrix.mult.slice(0,3).join(' → ');
+  return [{t:'For '+roles[0]+', prioritise: '+mult,b:'These multiplier skills appear in Tier 2+ JDs and move you from the basic to skilled salary band fastest.'}];
+}
+var RECS=[
+  {t:"Aim at the band where 60–70% of jobs actually land",b:"The basic band is the real market. Use the skilled/differentiated bands as stretch targets, not your default expectation."},
+  {t:"Use competition ratio to pick your attack angle",b:"A role at 12:1 (Data Engineer) is far easier to enter than 44:1 (Data Analyst). Looser markets deserve serious consideration."},
+  {t:"Turn market intel into a skill order in Agent 02",b:"You now know demand and pay — Agent 02 tells you exactly which skills to learn, rated by hiring signal. Your role carries over."}
+];
+
+function sevenReports(roles, city){
+  var rows=roles.map(function(rn){return {rn:rn,d:ZAP.MARKET[rn]};}).filter(function(x){return x.d;});
+  if(!rows.length) return '';
+  var H='';
+
+  var bento = '<div class="bento-snapshot">' +
+    '<div class="verdict-col">' +
+      '<div class="verdict-hero vh-green">' +
+        '<div class="vh-lbl">MARKET TEMPERATURE</div>' +
+        '<div class="vh-val">HOT & RISING</div>' +
+        '<div class="vh-sub">Fresher openings up ~28% over 6 months; June is the strongest month this cycle.</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="data-col">' +
+      ZAP.kpiRow([
+        {lbl:'TOP SKILL',val:'GenAI / LLM',sub:'98 Demand',cls:'demand'},
+        {lbl:'TOP HUB',val:'Bengaluru',sub:'28% of jobs',cls:'pos'},
+        {lbl:'PULSE',val:'+28%',sub:'6-mo trend',cls:'trend'}
+      ]) +
+    '</div>' +
+  '</div>';
+
+  var deepDive = '<div class="deep-dive" style="margin-top:24px;">' +
+    '<aside class="sidebar-nav">' +
+      '<button class="s-tab active" onclick="switchSTab(this, \'mo-hotskills\')">📈 Hot Skills</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \'mo-pulse\')">🌡️ Hiring Pulse</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \'mo-recruiters\')">🏢 Recruiters</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \'mo-salary\')">💰 Salary</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \'mo-location\')">🗺️ Location</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \'mo-forecast\')">🔮 Forecast</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \'mo-roi\')">🎯 Skill ROI</button>' +
+    '</aside>' +
+    '<div class="sidebar-content">';
+
+  var hsMax=HOT_SKILLS[0][1];
+  var hsRows=HOT_SKILLS.map(function(s,i){
+    var col=s[2]>=0?'var(--emerald)':'var(--crimson)', ar=s[2]>=0?'▲':'▼';
+    return '<tr><td class="c">'+(i+1)+'</td><td><b>'+ZAP.esc(s[0])+'</b></td><td><span class="bar cyan" style="width:'+Math.round(s[1]/hsMax*100)+'%"></span></td><td class="c" style="color:'+col+';font-weight:700">'+ar+' '+(s[2]>0?'+':'')+s[2]+'%</td></tr>';
+  }).join('');
+  
+  deepDive += '<div class="s-panel active" id="mo-hotskills">' +
+     '<h3 class="sub" style="margin-top:0">📈 Report 1 — Hot Skills Demand <span class="htip">top 20 skills freshers are hired for, with 6-month trend</span></h3>'+
+     '<table class="t"><thead><tr><th class="c">#</th><th>SKILL / TECH</th><th>DEMAND</th><th class="c">TREND</th></tr></thead><tbody>'+hsRows+'</tbody></table>' +
+  '</div>';
+
+  var pulseBars=PULSE.map(function(m){return '<div class="bar-row"><div class="lbl">'+m[0]+' \'26</div><div><span class="bar em" style="width:'+m[1]+'%"></span></div><div style="text-align:right;font-weight:700;color:var(--emerald)">'+m[1]+'</div></div>';}).join('');
+  var roleOpenRows=rows.map(function(x){return '<tr><td><b>'+ZAP.esc(x.rn)+'</b></td><td class="c">'+x.d.listings.toLocaleString()+'</td><td class="c">'+ZAP.esc(x.d.demandSub)+'</td></tr>';}).join('');
+  
+  deepDive += '<div class="s-panel" id="mo-pulse">' +
+     '<h3 class="sub" style="margin-top:0">🌡️ Report 2 — Entry-Level Hiring Pulse <span class="htip">fresher openings by month, role &amp; city — is the market hot or cold?</span></h3>'+
+     '<h4 class="micro">Openings index — last 6 months</h4><div class="bar-wrap">'+pulseBars+'</div>'+
+     '<h4 class="micro">Live openings for your selected role(s)</h4><table class="t"><thead><tr><th>ROLE</th><th class="c">LIVE OPENINGS</th><th class="c">QoQ</th></tr></thead><tbody>'+roleOpenRows+'</tbody></table>'+
+     '<h4 class="micro">By city — share of fresher openings</h4><div class="bar-wrap">'+CITY_DEMAND.map(function(ct){return '<div class="bar-row"><div class="lbl">'+ct[0]+'</div><div><span class="bar vi" style="width:'+(ct[1]*3)+'%"></span></div><div style="text-align:right;font-weight:700">'+ct[1]+'%</div></div>';}).join('')+'</div>' +
+  '</div>';
+
+  deepDive += '<div class="s-panel" id="mo-recruiters">' +
+     '<h3 class="sub" style="margin-top:0">🏢 Report 3 — Top Recruiting Companies (Freshers) <span class="htip">who is actively hiring 0–2 yr candidates this quarter</span></h3>'+
+     ZAP.table(['COMPANY','TYPE','FRESHER HIRING','HIRES FOR','FRESHER CTC'], RECRUITERS.map(function(r){return ['<b>'+ZAP.esc(r[0])+'</b>',ZAP.esc(r[1]),'<span class="tag '+(r[2].indexOf('Very')>-1?'tg':r[2]==='High'?'tc':'ta')+'">'+ZAP.esc(r[2])+'</span>',ZAP.esc(r[3]),ZAP.esc(r[4])];})) +
+  '</div>';
+
+  var cityCols=['Bengaluru','Hyderabad','Pune','NCR / Delhi','Chennai'];
+  var cityMult={}; CITY_DEMAND.forEach(function(c){cityMult[c[0]]=c[2];});
+  var salRows=rows.map(function(x){
+    var b=parseBand(x.d.bands.basic.amt); var cells=['<b>'+ZAP.esc(x.rn)+'</b>'];
+    cityCols.forEach(function(cn){ var m=cityMult[cn]||1; cells.push(b?fmtBand(b[0]*m,b[1]*m):ZAP.esc(x.d.bands.basic.amt)); });
+    return cells;
+  });
+  deepDive += '<div class="s-panel" id="mo-salary">' +
+     '<h3 class="sub" style="margin-top:0">💰 Report 4 — Salary Benchmark (Basic) <span class="htip">typical fresher band by role &amp; city — broad ranges only</span></h3>'+
+     ZAP.table(['ROLE'].concat(cityCols), salRows)+'<p style="font-size:11px;color:var(--text-muted);margin-top:8px">Basic band (~60–70% of offers). Skilled / differentiated bands run higher — see the per-role deep dive.</p>' +
+  '</div>';
+
+  deepDive += '<div class="s-panel" id="mo-location">' +
+     '<h3 class="sub" style="margin-top:0">🗺️ Report 5 — Location Heatmap <span class="htip">where IT fresher demand concentrates</span></h3>'+
+     '<div class="bar-wrap">'+CITY_DEMAND.map(function(ct){var cls=ct[1]>=18?'cr':ct[1]>=10?'am':'cyan';var heat=ct[1]>=18?'🔥 Hotspot':ct[1]>=10?'Warm':'Emerging';return '<div class="bar-row"><div class="lbl">'+ct[0]+'</div><div><span class="bar '+cls+'" style="width:'+(ct[1]*3)+'%"></span> <span style="font-size:11px;color:var(--text-muted)">'+heat+'</span></div><div style="text-align:right;font-weight:700">'+ct[1]+'%</div></div>';}).join('')+'</div>' +
+  '</div>';
+
+  var r6Content = '';
+  rows.forEach(function(x){
+    var up=x.d.trends.filter(function(t){return t[2]==='up';}).slice(0,3);
+    var dn=x.d.trends.filter(function(t){return t[2]==='down';}).slice(0,2);
+    r6Content+='<div class="role-report" style="padding:14px 18px;margin:8px 0;background:var(--bg-subtle);"><b>'+ZAP.esc(x.rn)+'</b> — outlook '+ZAP.esc(x.d.trend)+' ('+ZAP.esc(x.d.demandSub)+')'+
+       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">'+
+       '<div><div class="micro" style="color:var(--emerald)">▲ RISING — learn these</div>'+up.map(function(t){return '<div style="font-size:12px;color:var(--emerald)">'+ZAP.esc(t[0])+' (+'+t[1]+'%)</div>';}).join('')+'</div>'+
+       '<div><div class="micro" style="color:var(--crimson)">▼ DECLINING — avoid</div>'+(dn.length?dn.map(function(t){return '<div style="font-size:12px;color:var(--crimson)">'+ZAP.esc(t[0])+' ('+t[1]+'%)</div>';}).join(''):'<div style="font-size:12px;color:var(--text-muted)">—</div>')+'</div></div></div>';
+  });
+  deepDive += '<div class="s-panel" id="mo-forecast">' +
+     '<h3 class="sub" style="margin-top:0">🔮 Report 6 — 6-Month Demand Forecast <span class="htip">what rises and declines — learn ahead of the curve</span></h3>' +
+     r6Content +
+  '</div>';
+
+  var roiRows=[];
+  rows.forEach(function(x){
+    var bd=parseBand(x.d.bands.diff.amt), bb=parseBand(x.d.bands.basic.amt);
+    var uplift=(bd&&bb)?'+₹'+Math.max(1,Math.round(bd[0]-bb[1]))+'L+':'High';
+    x.d.matrix.mult.slice(0,3).forEach(function(sk){
+      roiRows.push(['<b>'+ZAP.esc(sk)+'</b>','<span class="tag tg">High</span>','<span class="tag '+(ratioNum(x.d.ratio)>30?'trd':'ta')+'">'+ZAP.esc(x.d.ratio)+'</span>','<span style="color:var(--emerald);font-weight:700">'+uplift+'</span>','<span class="tag tc">LEARN ✓</span>']);
+    });
+    (x.d.matrix.drop||[]).slice(0,1).forEach(function(sk){
+      roiRows.push(['<b>'+ZAP.esc(sk)+'</b>','<span class="tag trd">Low</span>','<span class="tag ta">—</span>','<span style="color:var(--crimson)">flat / down</span>','<span class="tag trd">SKIP ✗</span>']);
+    });
+  });
+  deepDive += '<div class="s-panel" id="mo-roi">' +
+     '<h3 class="sub" style="margin-top:0">🎯 Report 7 — Skill ROI · "Should I Learn X?" <span class="htip">demand vs competition vs salary uplift</span></h3>'+
+     ZAP.table(['SKILL','DEMAND','COMPETITION','SALARY UPLIFT','VERDICT'], roiRows) +
+  '</div>';
+
+  deepDive += '</div></div>';
+
+  return '<div class="seven-reports">' + bento + deepDive + '</div>';
+}
+
+function renderRole(rn,d){
+  var trendRows=d.trends.map(function(t){
+    var col=t[2]==='up'?'var(--emerald)':'var(--crimson)', ar=t[2]==='up'?'▲':'▼';
+    return '<tr><td><b>'+ZAP.esc(t[0])+'</b></td><td style="text-align:center;color:'+col+';font-weight:700">'+ar+' '+(t[1]>0?'+':'')+t[1]+'%</td></tr>';
+  }).join('');
+  var clusterBars=d.clusters.map(function(c,i){
+    var cols=['var(--cyan)','var(--emerald)','var(--violet)'],bc=['cyan','em','vi'][i];
+    return '<div class="bar-row"><div class="lbl" style="color:'+cols[i]+'">C'+(i+1)+': '+ZAP.esc(c.nm)+'</div><div><span class="bar '+bc+'" style="width:'+c.share+'%"></span> <span style="color:'+cols[i]+';font-weight:700;margin-left:6px">~'+c.jobs+' jobs</span></div><div style="font-weight:700">'+c.share+'%</div></div>';
+  }).join('');
+  function mat(a){return a.map(function(s){return '<div class="item">'+ZAP.linkName(s)+'</div>';}).join('');}
+  var vcls=/UP/.test(d.trend)?'vh-green':(/FLAT/.test(d.trend)?'vh-cyan':'vh-amber');
+  var bento = '<div class="bento-snapshot">' +
+    '<div class="verdict-col">' +
+      '<div class="verdict-hero '+vcls+'">' +
+        '<div class="vh-lbl">MARKET VERDICT</div>' +
+        '<div class="vh-val">'+ZAP.esc(d.trend)+'</div>' +
+        '<div class="vh-sub">'+ZAP.esc(d.demandSub)+'</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="data-col">' +
+      ZAP.kpiRow([{lbl:'DEMAND',val:d.demand,sub:d.demandSub,cls:'demand'},{lbl:'SUPPLY',val:d.supply,sub:d.supplySub,cls:'supply'},{lbl:'POSITION',val:d.position,sub:d.posSub,cls:'pos'},{lbl:'COMPETITION',val:d.ratio,sub:'Overall',cls:'trend'}]) +
+      ZAP.beginnerBox(rn) +
+    '</div>' +
+  '</div>';
+
+  var id = rn.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
+  var deepDive = '<div class="deep-dive">' +
+    '<aside class="sidebar-nav">' +
+      '<button class="s-tab active" onclick="switchSTab(this, \''+id+'-skills\')">Skill Priority Matrix</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-tiers\')">Company Tiers</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-salary\')">Salary Reality</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-gaps\')">Gaps & Trends</button>' +
+    '</aside>' +
+    '<div class="sidebar-content">' +
+      '<div class="s-panel active" id="'+id+'-skills">' +
+        '<h3 class="sub" style="margin-top:0">Skill Priority Matrix</h3>' +
+        '<div class="matrix"><div class="matrix-row"><div class="matrix-head"></div><div class="matrix-head">LOW SALARY IMPACT</div><div class="matrix-head">HIGH SALARY IMPACT</div></div>' +
+        '<div class="matrix-row"><div class="matrix-axis">HIGH DEMAND</div><div class="matrix-cell ms"><div class="lbl">TABLE STAKES</div>'+mat(d.matrix.stakes)+'<div class="meta">Required to qualify. Won\'t differentiate.</div></div><div class="matrix-cell mm"><div class="lbl">▶ MULTIPLIERS</div>'+mat(d.matrix.mult)+'<div class="meta">Invest 50% of time here.</div></div></div>' +
+        '<div class="matrix-row"><div class="matrix-axis">LOW DEMAND</div><div class="matrix-cell md"><div class="lbl">▶ STOP</div>'+mat(d.matrix.drop)+'<div class="meta">Exit these now.</div></div><div class="matrix-cell mb"><div class="lbl">▶ BETS</div>'+mat(d.matrix.bets)+'<div class="meta">Unlock premium bands.</div></div></div></div>' +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-tiers">' +
+        '<h3 class="sub" style="margin-top:0">Company Hiring Strategy by Tier</h3>' +
+        '<div class="tiers">' +
+        '<div class="tier-col"><div class="tier-head t1"><div class="lbl">TIER 1</div><div class="ttl">Service Companies</div><div class="co">'+ZAP.esc(d.t1.co)+'</div></div><div class="tier-cell"><div class="lbl">VOL</div>'+ZAP.esc(d.t1.vol)+'</div><div class="tier-cell alt"><div class="lbl">FILTER</div>'+ZAP.esc(d.t1.filter)+'</div><div class="tier-cell tier-strat t1"><div class="lbl">▶ STRATEGY</div><div class="strat">'+ZAP.esc(d.t1.strategy)+'</div><div class="salary">'+ZAP.esc(d.t1.salary)+'</div></div></div>' +
+        '<div class="tier-col"><div class="tier-head t2"><div class="lbl">TIER 2</div><div class="ttl">Indian Product Cos</div><div class="co">'+ZAP.esc(d.t2.co)+'</div></div><div class="tier-cell"><div class="lbl">VOL</div>'+ZAP.esc(d.t2.vol)+'</div><div class="tier-cell alt"><div class="lbl">FILTER</div>'+ZAP.esc(d.t2.filter)+'</div><div class="tier-cell tier-strat t2"><div class="lbl">▶ STRATEGY</div><div class="strat">'+ZAP.esc(d.t2.strategy)+'</div><div class="salary">'+ZAP.esc(d.t2.salary)+'</div></div></div>' +
+        '<div class="tier-col"><div class="tier-head t3"><div class="lbl">TIER 3</div><div class="ttl">FAANG / Global</div><div class="co">'+ZAP.esc(d.t3.co)+'</div></div><div class="tier-cell"><div class="lbl">VOL</div>'+ZAP.esc(d.t3.vol)+'</div><div class="tier-cell alt"><div class="lbl">FILTER</div>'+ZAP.esc(d.t3.filter)+'</div><div class="tier-cell tier-strat t3"><div class="lbl">▶ STRATEGY</div><div class="strat">'+ZAP.esc(d.t3.strategy)+'</div><div class="salary">'+ZAP.esc(d.t3.salary)+'</div></div></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-salary">' +
+        '<h3 class="sub" style="margin-top:0">Salary Reality</h3>' +
+        '<div class="salary-bands"><div class="salary-band basic"><div class="lbl">BASIC</div><div class="amt">'+ZAP.esc(d.bands.basic.amt)+'</div><div class="desc">'+ZAP.esc(d.bands.basic.desc)+'</div><div class="share">'+ZAP.esc(d.bands.basic.share)+' of offers</div></div><div class="salary-band skilled"><div class="lbl">SKILLED</div><div class="amt">'+ZAP.esc(d.bands.skilled.amt)+'</div><div class="desc">'+ZAP.esc(d.bands.skilled.desc)+'</div><div class="share">'+ZAP.esc(d.bands.skilled.share)+' of offers</div></div><div class="salary-band diff"><div class="lbl">DIFFERENTIATED</div><div class="amt">'+ZAP.esc(d.bands.diff.amt)+'</div><div class="desc">'+ZAP.esc(d.bands.diff.desc)+'</div><div class="share">'+ZAP.esc(d.bands.diff.share)+' of offers</div></div></div>' +
+        '<h3 class="sub" style="margin-top:24px">Live Demand Clusters</h3><div class="bar-wrap">'+clusterBars+'</div>' +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-gaps">' +
+        '<h3 class="sub" style="margin-top:0">Market Gap Analysis</h3>'+ZAP.table(['AREA','MARKET EXPECTS','STUDENT REALITY','GAP'],d.gaps.map(function(g){return ['<b>'+ZAP.esc(g[0])+'</b>','<span class="tg">'+ZAP.esc(g[1])+'</span>','<span class="tr">'+ZAP.esc(g[2])+'</span>','<span class="'+(g[3]==='WIDE'?'gap-w':'gap-m')+'">'+g[3]+'</span>'];})) +
+        '<h3 class="sub" style="margin-top:24px">Trends (6 months) '+ZAP.indic('Indicative')+'</h3>'+'<table class="t"><thead><tr><th>SKILL / PATTERN</th><th class="c">▲ 6M</th></tr></thead><tbody>'+trendRows+'</tbody></table>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  return '<div class="role-report" style="border:0;padding:0;">' +
+    '<div style="display:flex;align-items:center;gap:12px;margin:16px 0 24px;flex-wrap:wrap"><h2 class="sec" style="margin:0;border:0">'+ZAP.esc(rn)+'</h2><span style="font-size:13px;color:var(--text-muted)">'+ZAP.esc(d.desc)+'</span></div>' +
+    bento +
+    deepDive +
+    '</div>';
+}
+
+/* ---- report tab switching helpers ---- */
+window.switchReportTab=function(tab){
+  ['role','market'].forEach(function(t){
+    var p=document.getElementById('rpanel-'+t); if(p) p.classList.toggle('hidden',t!==tab);
+    var b=document.getElementById('rtab-'+t); if(b) b.classList.toggle('active',t===tab);
+  });
+};
+window.switchRoleTab=function(idx){
+  document.querySelectorAll('.role-panel').forEach(function(p,i){ p.classList.toggle('active',i===idx); });
+  document.querySelectorAll('.rsub').forEach(function(b,i){ b.classList.toggle('active',i===idx); });
+};
+window.switchSTab=function(btn,id){
+  var nav=btn.parentNode;
+  var content=nav.nextElementSibling;
+  nav.querySelectorAll('.s-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  content.querySelectorAll('.s-panel').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById(id); if(t) t.classList.add('active');
+};
+window.smoothJump=function(id){
+  var el=document.getElementById(id);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  return false;
+};
+
+/* ---- standard boot (identical across agents) ---- */
+(function(){
+  if(AGENT.info) ZAP.mountInfo('info', AGENT.info);
+  if(AGENT.info) ZAP.mountInfoCTA('&#9889; Get My Market Intelligence &rarr;', '<strong>You\'re looking at the market picture.</strong> Pick your role(s) to generate a personalised report.');
+  var s=AGENT.selector||{type:'roles',multi:true};
+  // chaining: restore role selection carried from a previous role-based agent
+  var restore=[];
+  if(s.type==='roles'){ var saved=ZAP.recall('roles'); if(saved&&saved.length){ restore=saved; ZAP.carryBanner('carryBanner', saved); } }
+  if(s.type==='roles') ZAP.mountRoles('roleGrid', {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel, restore:restore});
+  else ZAP.mountChips('roleGrid', s.items||[], {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel});
+  // prefill resume textarea if one exists and we have remembered resume text
+  var rt=document.getElementById('resumeText'); var savedResume=ZAP.recall('resume');
+  if(rt&&savedResume&&!rt.value) rt.value=savedResume;
+  // copt (Step 2) selection
+  document.addEventListener('click', function(e){
+    var o=e.target.closest && e.target.closest('.copt');
+    if(o){ var g=o.parentNode; g.querySelectorAll('.copt').forEach(function(x){x.classList.remove('active');}); o.classList.add('active'); }
+  });
+  window.optVal=function(id){ var e=document.querySelector('#'+id+' .copt.active'); return e?e.textContent.trim():''; };
+  function run(){
+    var sel=ZAP.selected('roleGrid');
+    if(!sel.length){ alert('Please select at least one '+(AGENT.unit||'role')+' first.'); return; }
+    // chaining: remember role selection + any resume text for the next agent
+    if(s.type==='roles'){ ZAP.remember('roles', sel); ZAP.remember('role', sel[0]); }
+    var rtx=document.getElementById('resumeText'); if(rtx&&rtx.value&&rtx.value.replace(/\s/g,'').length>40) ZAP.remember('resume', rtx.value);
+    ZAP.showReport();
+    AGENT.report(sel);
+    var dl=document.getElementById('dl-btn');
+    if(dl) dl.onclick=function(){ ZAP.download(AGENT.dlname||'zapit_report.txt', AGENT.dltext?AGENT.dltext(sel):JSON.stringify(sel)); };
+  }
+  document.getElementById('run-btn').addEventListener('click', run);
+})();
+</script>
+</body>
+</html>
+
+
+

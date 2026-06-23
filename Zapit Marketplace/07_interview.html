@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Interview Readiness — Pocket Book — ZAP IT</title>
+<link rel="stylesheet" href="_shared.css">
+<style>.role-report{border:2px solid var(--border);border-top:4px solid var(--cyan);border-radius:8px;padding:24px;margin:16px 0}.tab-wrap{margin-top:4px}</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="brand">ZAP<em>IT</em></a>
+  <div class="topbar-right"><a href="index.html" class="tbtn">← All Agents</a></div>
+</div>
+<div class="wrap">
+  <div class="agent-hdr">
+    <div class="step-tag">AGENT 07 · INTERVIEW</div>
+    <div class="title-row"><div class="agent-ico">&#127908;</div><div><h1>Interview Readiness — Pocket Book</h1></div></div>
+    <div class="agent-desc">A shelf of pocket books — one per role, plus a common HR set. Pick your role, grab the pocket book, revise on the go: Quick Snapshot, Q&A bank, mock practice, day-before checklist and dos & don’ts.</div>
+  </div>
+  <div class="agent-info" id="info"></div>
+  <div class="config-panel">
+    <div class="config-panel-title"><span>&#9881;</span> Step 1 — Select the Role <span class="rolecount" data-rolecount style="margin-left:8px">none selected</span></div>
+    <div class="step-note">Pick the role you’re interviewing for to build your pocket book.</div>
+    <div id="carryBanner"></div>
+    <div class="role-grid" id="roleGrid"></div>
+    
+    <button class="run-btn" id="run-btn">&#9889; Build My Pocket Book</button>
+    <button type="button" class="dl-btn" style="margin-left:10px;vertical-align:middle" onclick="(function(){var a=document.querySelector('#roleGrid .all-roles');if(a&&!a.classList.contains('sel'))a.click();document.getElementById('run-btn').click();setTimeout(function(){var d=document.getElementById('dl-btn');if(d)d.click();},220);})()"> Download All Pocket Books (bundle)</button>
+    <div class="run-note">Grab one pocket book for your role, or the whole set. Printable &amp; last-minute friendly — fully offline.</div>
+  </div>
+  <div class="report-wrap" id="report-wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      <button class="dl-btn" id="dl-btn">&#11015; Download (.txt)</button>
+      <button class="nfbtn" onclick="window.print()">&#128424; Print</button>
+    </div>
+    <div id="reports-container"></div>
+  </div>
+  <div class="nav-footer">
+    <a class="nfbtn" href="index.html">← All Agents</a>
+    <a class="nfbtn primary" href="08_booster.html">Next: Platform Booster &rarr;</a>
+  </div>
+</div>
+<script src="_engine.js"></script>
+<script src="_skills.js"></script>
+<script>
+/* Agent 9 — Interview Readiness Pocket Book. */
+var BEHAVIORAL=[
+  ["Tell me about yourself","2 lines on who you are + 1 standout project + what you want next. Practice it to 30 seconds."],
+  ["Walk me through a project","Problem → your role → key decision/trade-off → result. Lead with the decision, not the tech list."],
+  ["A challenge you faced","Pick a real bug/blocker. Situation → what you tried → what worked → what you learned."],
+  ["Why this company / role","One specific thing about them + how your project maps to their work. Avoid generic flattery."],
+  ["Where do you see yourself","Show direction tied to the role (deeper in the craft), not a title grab."]
+];
+var SOFT_SKILLS=[
+  ["Communication","Explain a complex thing simply. Practise saying your project in 60s."],
+  ["Structured thinking","Answer in order: problem → approach → result. Don't ramble."],
+  ["Listening","Let them finish; ask one clarifying question before answering."],
+  ["Honesty","Say 'I don't know, but here's how I'd find out' — never bluff."],
+  ["Confidence (not arrogance)","Steady voice, own your work, admit gaps calmly."],
+  ["Curiosity","Ask one smart question about their team/product."]
+];
+var TEN_MIN=[
+  "Re-read your own resume — be ready to speak to every single line",
+  "Say your 30-second intro out loud once",
+  "Open your 2 best projects; recall the one key decision in each",
+  "Skim the 5 'revise first' skills below",
+  "Read 1 fact about the company + 1 recent news item",
+  "Pick 2 questions to ask them; breathe, join 5 minutes early"
+];
+var DOS=["Explain your own code line by line — they will ask","Think out loud during problem-solving","Ask one sharp question about their work","Bring 2 projects you can demo live","State assumptions before you code"];
+var DONTS=["Don't list tech you can't explain","Don't memorise answers word-for-word","Don't badmouth past teams/colleges","Don't go silent when stuck — narrate","Don't claim a project you can't walk through"];
+var AGENT={
+  unit:'role', dlname:'zapit_interview_pocketbook.txt',
+  info:{
+    what:"Your pocket interview book for a role: a last-minute Quick Snapshot, a Q&A flashcard bank (technical + behavioural), mock-practice prompts, a pre-interview checklist, and dos & don'ts.",
+    why:"Students fail interviews despite preparation — wrong focus, can't explain their own code, no structure. Keep this open before any interview.",
+    features:["Quick Snapshot + self-intro template (day-before mode)","Concept refreshers — quick definitions to revise fast","Technical Q&A bank + HR/behavioural flashcards","Coding/round-pattern notes + common mistakes to avoid","Mock-practice prompts + smart questions to ask them","Last-minute checklist — revise 1 hour before","Grab one role's book or download the whole shelf"],
+    examples:["Frontend: revise hooks, closures, deploy story","'Walk me through a project' — structured answer template","Checklist: 2 demoable projects, charged laptop, quiet room"]
+  },
+  selector:{type:'roles',multi:true,allLabel:'All Roles'},
+  report:function(roles){
+    var c=document.getElementById('reports-container');
+    var html='<div class="step-note">Pocket book(s) for '+roles.map(function(r){return ZAP.esc(r);}).join(', ')+' &nbsp; '+ZAP.indic('Indicative — tailor to the company')+'</div>';
+    
+    html+='<div class="report-panel" id="rpanel-role">';
+    if(roles.length===1){
+      html+=renderPocketBook(roles[0]);
+    } else {
+      html+='<div class="report-sub-tabs">';
+      roles.forEach(function(rn,i){
+        html+='<button class="rsub'+(i===0?' active':'')+'" onclick="switchRoleTab('+i+')">'+ZAP.esc(rn)+'</button>';
+      });
+      html+='</div>';
+      roles.forEach(function(rn,i){
+        html+='<div class="role-panel'+(i===0?' active':'')+'" id="rp-'+i+'">';
+        html+=renderPocketBook(rn);
+        html+='</div>';
+      });
+    }
+    html+='</div>';
+    
+    html+=ZAP.closeout(RECS, {href:'08_booster.html',label:'Agent 08 · Platform Booster',desc:'Add a real enterprise-platform skill you can defend in a screening.'}, ['Most interviews fail because candidates <b>can\'t explain their own code</b> — rehearse projects out loud.','Use <b>structures, not scripts</b>: problem → decision → result; STAR for behavioural.','Last-minute, revise <b>your projects + role fundamentals</b>, not trivia.']);
+    c.innerHTML=html;
+  },
+  dltext:function(roles){
+    var t='ZAP IT — INTERVIEW POCKET BOOK\n'+'='.repeat(48)+'\n\n';
+    roles.forEach(function(rn){
+      var s=ZAP.SKILLS[rn]||{primary:[],secondary:[]}; var f=FAM[famOf(rn)];
+      var top=s.primary.slice(0,5).map(function(x){return x.n;});
+      var tech=s.primary.concat(s.secondary).slice(0,10).map(function(x){return x.n;});
+      t+=rn+'\n'+'-'.repeat(40)+'\n';
+      t+='REVISE FIRST: '+top.join(', ')+'\n\n';
+      t+='30-SEC PITCH: "I\'m a '+rn+' who recently built [project] using '+(top[0]||'[skill]')+'. I enjoy [what], and I\'m looking to [goal]."\n\n';
+      t+='CONCEPT REFRESHERS:\n - '+f.concepts.join('\n - ')+'\n\n';
+      t+='TECHNICAL Q&A (explain + a pitfall each):\n - '+tech.map(function(x){return 'Explain '+x;}).join('\n - ')+'\n\n';
+      t+='HR / BEHAVIOURAL:\n - '+BEHAVIORAL.map(function(q){return q[0]+' -> '+q[1];}).join('\n - ')+'\n\n';
+      t+='ROUND PATTERN:\n - '+f.rounds.join('\n - ')+'\n\n';
+      t+='COMMON MISTAKES:\n - '+f.mistakes.join('\n - ')+'\n\n';
+      t+='SMART QUESTIONS TO ASK:\n - '+SMART_QUESTIONS.join('\n - ')+'\n\n';
+      t+='LAST-MINUTE CHECKLIST:\n - '+LASTMIN.join('\n - ')+'\n\n'+'='.repeat(40)+'\n\n';
+    });
+    return t;
+  }
+};
+window.switchRoleTab=function(idx){
+  document.querySelectorAll('.role-panel').forEach(function(p,i){ p.classList.toggle('active',i===idx); });
+  document.querySelectorAll('.rsub').forEach(function(b,i){ b.classList.toggle('active',i===idx); });
+};
+window.switchSTab=function(btn,id){
+  var nav=btn.parentNode;
+  var content=nav.nextElementSibling;
+  nav.querySelectorAll('.s-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  content.querySelectorAll('.s-panel').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById(id); if(t) t.classList.add('active');
+};
+var SMART_QUESTIONS=["What does success look like for this role in the first 6 months?","What does the team's day-to-day and tech stack look like?","How are projects scoped, reviewed and shipped here?","What learning/mentoring support do freshers get?","What's the biggest challenge the team is solving right now?","What are the next steps in the process?"];
+var LASTMIN=["2 projects you can demo live (URLs ready)","Laptop charged + stable internet + quiet room","Resume open + can speak to every line","Company: know 1 product + 1 recent thing","3 questions ready to ask them","Water, calm, 10 min early"];
+var FAM={
+ dev:{concepts:["Time / space complexity (Big-O)","Core data structures: array, hashmap, stack, queue, tree","OOP: encapsulation, inheritance, polymorphism","REST: verbs, status codes, idempotency","DB basics: indexes, joins, transactions","HTTP & caching","Async / concurrency basics","Git: branch, merge, rebase"],rounds:["Round 1 — Online assessment: 1–2 DSA problems + CS MCQs","Round 2 — Technical: live DSA on a shared editor + project deep-dive","Round 3 — Machine coding / system-design-lite: build a small feature","Round 4 — HR / culture fit"],mistakes:["Listing tech you can't explain or demo","Coding before stating assumptions","Going silent when stuck instead of narrating","No live / deployed project to show","Can't explain your own code's trade-offs"]},
+ data:{concepts:["SQL: joins, GROUP BY, window functions, CTEs","Stats: distribution, p-value, A/B testing","Pandas / dataframe basics","ML: train/test split, overfitting, evaluation metrics","Feature engineering","Data modelling: star schema, normalization","ETL vs ELT","Visualization & storytelling"],rounds:["Round 1 — SQL + aptitude assessment","Round 2 — Case study: analyze a dataset / business problem","Round 3 — Technical: stats / ML + project deep-dive","Round 4 — HR / stakeholder communication"],mistakes:["Reporting numbers with no insight or recommendation","No published case study to point to","Confusing correlation with causation","Explaining a model only by accuracy","SELECT * thinking — no query-optimization sense"]},
+ infra:{concepts:["Linux & networking (DNS, ports, TCP)","Containers: Docker images & layers","Kubernetes: pods, services, deployments","CI/CD pipeline stages","IaC: Terraform plan / apply","Observability: metrics, logs, traces","Cloud: VPC, IAM, compute, storage","SLO / error budget"],rounds:["Round 1 — Linux/cloud MCQ + scripting","Round 2 — Scenario: debug a broken pipeline / deployment","Round 3 — Reliability & cloud-architecture discussion","Round 4 — HR / on-call mindset"],mistakes:["ClickOps only — no IaC experience","Local Minikube but no real-cluster story","Can't reason about an incident / runbook","No cost or security awareness","Memorized commands without understanding"]},
+ qa:{concepts:["Test types: unit, integration, e2e, regression","Automation: locators, waits, assertions","API testing: status, schema, contracts","Test design: boundary, equivalence, negative","CI integration of tests","Bug lifecycle; severity vs priority","Page Object Model","Performance-test basics"],rounds:["Round 1 — Aptitude + testing fundamentals","Round 2 — Coding: write automation for a flow","Round 3 — Test-design discussion + framework deep-dive","Round 4 — HR / process fit"],mistakes:["Record-and-playback only, no code","Manual-only mindset for an SDET role","No API / automation in CI story","Can't design tests for edge cases","Vague on flaky-test handling"]},
+ security:{concepts:["CIA triad; authn vs authz","OWASP Top 10 (XSS, SQLi, CSRF)","Networking, firewalls, TLS","SIEM / SOC basics","Threat modeling","Encryption vs hashing","Cloud security (IAM, posture)","Incident-response steps"],rounds:["Round 1 — Networking + security fundamentals + cert check","Round 2 — Scenario: analyze logs / find a vuln","Round 3 — Hands-on (CTF-style) + project/CVE deep-dive","Round 4 — HR / ethics & discretion"],mistakes:["Compliance words with no technical depth","No CTF / bug-bounty / hands-on evidence","Can't read code for vulnerabilities","Network-only, no cloud security","Overclaiming tools you can't operate"]},
+ design:{concepts:["Process: research → wireframe → prototype → test","Usability heuristics","Typography, color, spacing","Design systems & tokens","Accessibility (WCAG)","Interaction & micro-interactions","User-research methods","Figma proficiency"],rounds:["Round 1 — Portfolio review","Round 2 — Design challenge / whiteboard","Round 3 — Critique + process deep-dive","Round 4 — HR / collaboration fit"],mistakes:["Screens with zero user research","Dribbble shots, no case study or outcome","No accessibility consideration","Can't explain design decisions","One-off screens, no system thinking"]},
+ product:{concepts:["Prioritization (RICE, MoSCoW)","Metrics: north-star, funnel, retention","User research & problem framing","PRD / spec writing","Roadmapping & trade-offs","A/B testing & hypotheses","Stakeholder management","Basic SQL / data sense"],rounds:["Round 1 — Aptitude + guesstimate","Round 2 — Product sense: design a feature","Round 3 — Analytical / metrics case","Round 4 — Behavioural / leadership"],mistakes:["Slide decks, no written PRD craft","Opinions without data / metrics","Zero user interviews","Feature-listing without prioritization","Can't tie a feature to a metric"]},
+ marketing:{concepts:["Funnel: awareness → consideration → conversion","ROAS, CAC, LTV","Attribution models","SEO fundamentals","Performance channels (Meta / Google)","A/B testing creatives","Analytics (GA4) basics","CRM / lifecycle"],rounds:["Round 1 — Aptitude + marketing fundamentals","Round 2 — Campaign case / metrics problem","Round 3 — Channel deep-dive + portfolio","Round 4 — HR / fit"],mistakes:["Vanity metrics (reach) over ROAS","No owned campaign with real numbers","Top-of-funnel only, no conversion view","Canva creatives, no performance testing","Can't read an attribution report"]}
+};
+function famOf(rn){
+ var map={"Frontend Dev":"dev","Backend Dev":"dev","Full Stack":"dev","Mobile Dev":"dev","Game Dev":"dev","Embedded / IoT":"dev","Data Analyst":"data","Data Scientist":"data","Data Engineer":"data","ML / AI Eng":"data","DevOps / SRE":"infra","Cloud Eng":"infra","QA / SDET":"qa","Cybersecurity":"security","UI/UX Designer":"design","Product Manager":"product","Business Analyst":"product","Digital Marketing":"marketing"};
+ return map[rn]||"dev";
+}
+function renderPocketBook(rn){
+  var s=ZAP.SKILLS[rn]||{primary:[],secondary:[]}; var m=ZAP.MARKET[rn]||{}; var f=FAM[famOf(rn)];
+  var top=s.primary.slice(0,5).map(function(x){return x.n;});
+  var tech=s.primary.concat(s.secondary).slice(0,10);
+  
+  var techCards=tech.map(function(x){
+    return '<div class="flashcard"><span class="fc-tag tc" style="background:var(--cyan-bg);color:var(--cyan)">TECHNICAL</span><div class="fc-q">Explain '+ZAP.esc(x.n)+' — and a common pitfall.</div><button class="reveal-btn">Show Answer</button><div class="fc-ans">Define it simply, give a concrete example from your project, then name one pitfall (misuse, performance, or a gotcha). Interviewers care that you can <b>explain and apply</b> '+ZAP.esc(x.n)+', not just name it.</div></div>';
+  }).join('');
+  
+  var behCards=BEHAVIORAL.map(function(q){
+    return '<div class="flashcard"><span class="fc-tag tv" style="background:var(--violet-bg);color:var(--violet)">HR / BEHAVIOURAL</span><div class="fc-q">'+ZAP.esc(q[0])+'</div><button class="reveal-btn">Show Answer</button><div class="fc-ans">'+ZAP.esc(q[1])+'</div></div>';
+  }).join('');
+  
+  var concepts='<h4 class="micro" style="margin-top:0">CONCEPT REFRESHERS — tap any to revise it →</h4><ul class="checklist">'+f.concepts.map(function(c){return '<li><span class="chk"></span><span>'+ZAP.linkName(c)+'</span></li>';}).join('')+'</ul>';
+  var tenMin='<div class="cheat" style="margin-top:0"><div class="cheat-tag">10-MINUTE PREP — do this right before you join</div><div class="cheat-ttl">'+ZAP.esc(rn)+' — last 10 minutes</div><ul class="cheat-list">'+TEN_MIN.map(function(x){return '<li>'+ZAP.esc(x)+'</li>';}).join('')+'</ul></div>';
+  var soft=SOFT_SKILLS.map(function(sx){return '<div class="flashcard"><span class="fc-tag" style="background:var(--amber-bg);color:var(--amber)">SOFT SKILL</span><div class="fc-q">'+ZAP.esc(sx[0])+'</div><button class="reveal-btn">Show tip</button><div class="fc-ans">'+ZAP.esc(sx[1])+'</div></div>';}).join('');
+  var qaCount=tech.length+BEHAVIORAL.length+f.concepts.length;
+
+  // Bento Snapshot components
+  var verdict = '<div class="verdict-col">' +
+    '<div class="verdict-hero vh-green">' +
+      '<div class="vh-lbl">INTERVIEW PREP</div>' +
+      '<div class="vh-val">' + ZAP.esc(rn) + '</div>' +
+      '<div class="vh-sub">Pocket preparation guide. Ready to revise.</div>' +
+    '</div>' +
+  '</div>';
+  
+  var kpis = ZAP.kpiRow([
+    {lbl:'REVISE FIRST', val:top.length+' skills', sub:top.slice(0, 3).join(' → '), cls:'demand'},
+    {lbl:'Q&A ITEMS', val:qaCount+' Items', sub:'tech + HR + concepts', cls:'pos'},
+    {lbl:'ROUNDS', val:f.rounds.length+'-stage', sub:'typical pattern', cls:'trend'},
+    {lbl:'PRE-INTERVIEW', val:'6-point check', sub:'ready checklist', cls:'violet'}
+  ]);
+  
+  var selfIntro = '<div class="sample-resume" style="margin:0"><h5>30-SECOND PITCH TEMPLATE</h5>"I\'m a '+ZAP.esc(rn)+' who recently built [project] using '+ZAP.esc(top[0]||'[top skill]')+'. I enjoy [what], and I\'m looking to [goal]."</div>';
+  var bento = '<div class="bento-snapshot">' + verdict + '<div class="data-col">' + kpis + selfIntro + '</div></div>';
+
+  var dayBefore = '<h4 class="micro" style="margin-top:0">DAY-BEFORE: 3 LIKELY TOPICS</h4><ul class="checklist"><li><span class="chk"></span><span>Your own projects (be ready to go deep)</span></li><li><span class="chk"></span><span>'+ZAP.esc(top[0]||'core skill')+' fundamentals</span></li><li><span class="chk"></span><span>One behavioural ("tell me about a challenge")</span></li></ul>';
+  var rounds='<h4 class="micro" style="margin-top:0">CODING / ROUND-PATTERN NOTES</h4><div class="journey">'+f.rounds.map(function(r,i){return (i?'<span class="j-arrow">→</span>':'')+'<div class="j-node"><div class="jn-ico">'+(i+1)+'</div><div class="jn-lbl">'+ZAP.esc(r.split(' — ')[0])+'</div></div>';}).join('')+'</div><ul class="checklist">'+f.rounds.map(function(r){return '<li><span class="chk"></span><span>'+ZAP.esc(r)+'</span></li>';}).join('')+'</ul>'+
+    '<h4 class="micro" style="margin-top:16px;color:var(--crimson)">COMMON MISTAKES TO AVOID</h4><div class="risk"><ul class="checklist">'+f.mistakes.map(function(x){return '<li><span class="chk"></span><span>'+ZAP.esc(x)+'</span></li>';}).join('')+'</ul></div>';
+  var mock='<h3 class="sub" style="margin-top:0">Mock-Practice Prompts</h3><p style="font-size:13px;color:var(--slate)">Practice these out loud, recorded if possible:</p><ul class="checklist">'+tech.slice(0,4).map(function(x){return '<li><span class="chk"></span><span>Explain '+ZAP.esc(x.n)+' in 60 seconds</span></li>';}).join('')+'<li><span class="chk"></span><span>Walk through your best project in 2 minutes</span></li><li><span class="chk"></span><span>Answer "tell me about yourself" in 30 seconds</span></li></ul>';
+  var smartQ='<h4 class="micro" style="margin-top:14px;color:var(--cyan)">SMART QUESTIONS TO ASK THE INTERVIEWER</h4><ul class="checklist">'+SMART_QUESTIONS.map(function(q){return '<li><span class="chk"></span><span>'+ZAP.esc(q)+'</span></li>';}).join('')+'</ul>';
+  var checklist='<h4 class="micro" style="margin-top:0">LAST-MINUTE CHECKLIST — revise 1 hour before</h4><ul class="checklist">'+LASTMIN.map(function(x){return '<li><span class="chk"></span><span>'+ZAP.esc(x)+'</span></li>';}).join('')+'</ul>'+smartQ;
+  var dd='<div class="config-grid" style="margin-top:0"><div><h4 class="micro" style="color:var(--emerald)">– DO</h4><ul class="checklist">'+DOS.map(function(x){return '<li><span class="chk"></span><span>'+ZAP.esc(x)+'</span></li>';}).join('')+'</ul></div><div><h4 class="micro" style="color:var(--crimson)"> DON\'T</h4><ul class="checklist">'+DONTS.map(function(x){return '<li><span class="chk"></span><span>'+ZAP.esc(x)+'</span></li>';}).join('')+'</ul></div></div>';
+
+  var id = rn.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
+  var deepDive = '<div class="deep-dive">' +
+    '<aside class="sidebar-nav">' +
+      '<button class="s-tab active" onclick="switchSTab(this, \''+id+'-prep\')">📅 10-Min &amp; Day-Before</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-concepts\')">⚡ Concept Refreshers</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-qa\')">📋 Technical Q&amp;A</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-hr\')">👥 HR &amp; Behavioural</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-rounds\')">🔄 Rounds &amp; Mistakes</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-mock\')">🎯 Mock &amp; Do/Don\'t</button>' +
+    '</aside>' +
+    '<div class="sidebar-content">' +
+      '<div class="s-panel active" id="'+id+'-prep">' +
+        tenMin +
+        '<div style="margin-top:16px">' + dayBefore + '</div>' +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-concepts">' +
+        concepts +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-qa">' +
+        '<h4 class="micro" style="margin-top:0">TECHNICAL Q&amp;A ('+tech.length+')</h4>'+techCards +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-hr">' +
+        '<h4 class="micro" style="margin-top:0">HR &amp; BEHAVIOURAL</h4>'+behCards + soft +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-rounds">' +
+        rounds +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-mock">' +
+        mock +
+        '<h3 class="sub" style="margin-top:16px">Dos &amp; Don\'ts</h3>' + dd +
+        '<h3 class="sub" style="margin-top:16px">Last Minute Checklist</h3>' + checklist +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  return '<div class="role-report" style="border:0;padding:0;">'+
+    '<h2 class="sec" style="margin:16px 0 10px">'+ZAP.esc(rn)+' → Interview Pocket Book</h2>'+
+    bento +
+    deepDive +
+    '</div>';
+}
+var RECS=[
+  {t:"Rehearse explaining every project and skill out loud",b:"If you can't say it in 60 seconds, you don't know it yet. Use the Mock tab until each is smooth."},
+  {t:"Use structures, not scripts",b:"Problem → decision/trade-off → result for projects; STAR for behavioural. Structure survives follow-ups; scripts don't."},
+  {t:"Run the checklist before every interview",b:"Two demoable projects, a quiet setup, and company basics remove the avoidable failures."}
+];
+
+/* ---- standard boot (identical across agents) ---- */
+(function(){
+  if(AGENT.info) ZAP.mountInfo('info', AGENT.info);
+  var s=AGENT.selector||{type:'roles',multi:true};
+  // chaining: restore role selection carried from a previous role-based agent
+  var restore=[];
+  if(s.type==='roles'){ var saved=ZAP.recall('roles'); if(saved&&saved.length){ restore=saved; ZAP.carryBanner('carryBanner', saved); } }
+  if(s.type==='roles') ZAP.mountRoles('roleGrid', {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel, restore:restore});
+  else ZAP.mountChips('roleGrid', s.items||[], {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel});
+  // prefill resume textarea if one exists and we have remembered resume text
+  var rt=document.getElementById('resumeText'); var savedResume=ZAP.recall('resume');
+  if(rt&&savedResume&&!rt.value) rt.value=savedResume;
+  // copt (Step 2) selection
+  document.addEventListener('click', function(e){
+    var o=e.target.closest && e.target.closest('.copt');
+    if(o){ var g=o.parentNode; g.querySelectorAll('.copt').forEach(function(x){x.classList.remove('active');}); o.classList.add('active'); }
+  });
+  window.optVal=function(id){ var e=document.querySelector('#'+id+' .copt.active'); return e?e.textContent.trim():''; };
+  function run(){
+    var sel=ZAP.selected('roleGrid');
+    if(!sel.length){ alert('Please select at least one '+(AGENT.unit||'role')+' first.'); return; }
+    // chaining: remember role selection + any resume text for the next agent
+    if(s.type==='roles'){ ZAP.remember('roles', sel); ZAP.remember('role', sel[0]); }
+    var rtx=document.getElementById('resumeText'); if(rtx&&rtx.value&&rtx.value.replace(/\s/g,'').length>40) ZAP.remember('resume', rtx.value);
+    ZAP.showReport();
+    AGENT.report(sel);
+    var dl=document.getElementById('dl-btn');
+    if(dl) dl.onclick=function(){ ZAP.download(AGENT.dlname||'zapit_report.txt', AGENT.dltext?AGENT.dltext(sel):JSON.stringify(sel)); };
+  }
+  document.getElementById('run-btn').addEventListener('click', run);
+})();
+</script>
+</body>
+</html>

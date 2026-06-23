@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Career Roadmap — 30/60/90 Days — ZAP IT</title>
+<link rel="stylesheet" href="_shared.css">
+<style>.role-report{border:2px solid var(--border);border-top:4px solid var(--cyan);border-radius:8px;padding:24px;margin:16px 0}.tab-wrap{margin-top:4px}</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="brand">ZAP<em>IT</em></a>
+  <div class="topbar-right"><a href="index.html" class="tbtn">← All Agents</a></div>
+</div>
+<div class="wrap">
+  <div class="agent-hdr">
+    <div class="step-tag">AGENT 03 · ROADMAPS</div>
+    <div class="title-row"><div class="agent-ico">&#129517;</div><div><h1>Career Roadmaps — 30 / 60 / 90 Days</h1></div></div>
+    <div class="agent-desc">A shelf of ready-made roadmaps. Pick your role off the shelf and the whole 30/60/90 plan loads — foundation, build, job-ready — with projects, certs and where to apply. Pick one or download the catalogue.</div>
+  </div>
+  <div class="agent-info" id="info"></div>
+  <div class="config-panel">
+    <div class="config-panel-title"><span>&#9881;</span> Step 1 — Select Role(s) <span class="rolecount" data-rolecount style="margin-left:8px">none selected</span></div>
+    <div class="step-note">Pick a role (or a few). Tune Step 2 to your time budget for a realistic plan.</div>
+    <div id="carryBanner"></div>
+    <div class="role-grid" id="roleGrid"></div>
+    <div class="config-grid" style="margin-top:16px">
+  <div class="cgrp"><label>▶ Experience</label><div class="copts" id="g_exp"><div class="copt active">Final-year</div><div class="copt">Fresher (0-1y)</div><div class="copt">1-3 years</div><div class="copt">Switching field</div></div></div>
+  <div class="cgrp"><label>📄 Time you can give</label><div class="copts" id="g_hrs"><div class="copt">~10 hrs/week</div><div class="copt active">~15 hrs/week</div><div class="copt">~20 hrs/week</div><div class="copt">~30 hrs/week</div></div></div>
+</div>
+    <button class="run-btn" id="run-btn">&#9889; Generate My Roadmap</button>
+    <button type="button" class="dl-btn" style="margin-left:10px;vertical-align:middle" onclick="(function(){var a=document.querySelector('#roleGrid .all-roles');if(a&&!a.classList.contains('sel'))a.click();document.getElementById('run-btn').click();setTimeout(function(){var d=document.getElementById('dl-btn');if(d)d.click();},220);})()"> Get All Roadmaps (bundle)</button>
+    <div class="run-note">Browse the role shelf above — pick one, or grab the whole catalogue. Runs fully offline.</div>
+  </div>
+  <div class="report-wrap" id="report-wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      <button class="dl-btn" id="dl-btn">&#11015; Download (.txt)</button>
+      <button class="nfbtn" onclick="window.print()">&#128424; Print</button>
+    </div>
+    <div id="reports-container"></div>
+  </div>
+  <div class="nav-footer">
+    <a class="nfbtn" href="index.html">← All Agents</a>
+    <a class="nfbtn primary" href="04_domain.html">Next: Domain Readiness &rarr;</a>
+  </div>
+</div>
+<script src="_engine.js"></script>
+<script src="_skills.js"></script>
+<script>
+/* Per-role roadmap extras (indicative). Projects + where to build + apply targets. */
+var RM = {
+"Frontend Dev":{proj:[{t:"Deployed React dashboard",w:"Pull a public API (e.g. weather/crypto), build a filterable dashboard, deploy on Vercel.",s:"React, TS, Tailwind, Vercel"},{t:"Component library + Storybook",w:"10 reusable accessible components, documented in Storybook, published to GitHub Pages.",s:"React, Storybook, a11y"},{t:"Perf case study",w:"Take a slow page to 90+ Lighthouse; write the before/after.",s:"Core Web Vitals"}],apply:"Tier 1 service cos after Project 1; Tier 2 product cos after Projects 1+2 live."},
+"Backend Dev":{proj:[{t:"Auth API + DB",w:"REST API with JWT auth, Postgres, deployed on Render. Document with OpenAPI.",s:"Node/Java/Python, Postgres"},{t:"Rate-limited service",w:"Add Redis caching + rate limiting + tests to the auth API.",s:"Redis, testing, Docker"},{t:"Mini system-design writeup",w:"Design a URL shortener; write the trade-offs.",s:"System design"}],apply:"Tier 1 after Project 1; Tier 2 after 1+2 with tests + deploy."},
+"Full Stack":{proj:[{t:"End-to-end product",w:"A real app (notes, expense tracker) with auth+DB+deploy and real users.",s:"Next.js, Postgres, Vercel"},{t:"Add CI + tests",w:"GitHub Actions, types, e2e tests on the product above.",s:"GH Actions, Playwright"},{t:"Architecture writeup",w:"Document data model + trade-offs.",s:"System design"}],apply:"Tier 2 after the product is live with users."},
+"Data Analyst":{proj:[{t:"Published SQL+BI case study",w:"Take a public dataset, query in SQL, build a Power BI dashboard, write the insight.",s:"SQL, Power BI"},{t:"A/B test analysis",w:"Simulate/obtain an experiment dataset and report the result with stats.",s:"Python, stats"},{t:"Product-metrics teardown",w:"Pick an app, define its north-star metric, mock a funnel.",s:"Product analytics"}],apply:"Tier 1 after Project 1; Tier 2 after a published case study."},
+"Data Scientist":{proj:[{t:"End-to-end deployed model",w:"Train, evaluate, and serve a model behind an API.",s:"sklearn, FastAPI"},{t:"Experiment + writeup",w:"Hypothesis → test → honest result with ablations.",s:"stats, evaluation"},{t:"LLM/RAG mini-app",w:"Build a small RAG over your own docs.",s:"LLM, vector DB"}],apply:"Tier 1 after deployed model; Tier 2 after evaluation rigor is visible."},
+"Data Engineer":{proj:[{t:"End-to-end pipeline",w:"Ingest → transform (dbt) → warehouse → dashboard, scheduled with Airflow.",s:"dbt, Snowflake/BQ, Airflow"},{t:"Streaming demo",w:"Kafka producer/consumer with a simple sink.",s:"Kafka"},{t:"Data quality checks",w:"Add tests + alerting to the pipeline.",s:"dbt tests"}],apply:"Tier 1 after Project 1; demand is loose (12:1) so move fast."},
+"ML / AI Eng":{proj:[{t:"Production RAG app",w:"RAG over a real corpus, served via API, with an eval harness.",s:"LLM, FastAPI, vector DB"},{t:"Fine-tune + serve",w:"Fine-tune a small model, quantize, serve it.",s:"PyTorch, serving"},{t:"Eval dashboard",w:"Measure quality/latency/cost of your app.",s:"eval, monitoring"}],apply:"Tier 2 after 1 production RAG app — demand up +52% QoQ."},
+"DevOps / SRE":{proj:[{t:"Prod-grade K8s cluster",w:"Deploy a multi-service app on K8s with Helm + monitoring.",s:"K8s, Helm, Prometheus"},{t:"IaC everything",w:"Re-create the infra with Terraform from scratch.",s:"Terraform"},{t:"SLO + alerting",w:"Define SLOs and wire alerts.",s:"Grafana, SLOs"}],apply:"Tier 1 with a cloud cert; Tier 2 after the K8s project."},
+"Cloud Eng":{proj:[{t:"Multi-service cloud env",w:"VPC + IAM + compute + DB, all via Terraform.",s:"AWS, Terraform"},{t:"Cost + security pass",w:"Tag, budget, least-privilege IAM.",s:"FinOps, IAM"},{t:"DR/backup demo",w:"Add backups + a recovery runbook.",s:"backup, runbook"}],apply:"Tier 1 with AWS SA-Associate; Tier 2 after the env is real."},
+"Mobile Dev":{proj:[{t:"Published app",w:"Ship 1 app to Play/App Store with auth + REST + offline.",s:"Kotlin/Swift, Compose/SwiftUI"},{t:"UX polish pass",w:"Animations, empty states, dark mode.",s:"UX"},{t:"Perf profiling",w:"Find and fix a jank/startup issue.",s:"profiling"}],apply:"Tier 2 after 1 published, maintained app."},
+"Game Dev":{proj:[{t:"Polished jam game",w:"Ship a small, finished game on itch.io.",s:"Unity/Unreal, C#/C++"},{t:"Engineering pass",w:"Refactor to clean, readable systems.",s:"architecture"},{t:"Game-feel lab",w:"Add juice: feedback, screenshake, sound.",s:"game feel"}],apply:"Studios after 1 polished, finished game."},
+"Embedded / IoT":{proj:[{t:"Real-hardware firmware",w:"Build firmware on actual STM32/ESP32 — not a simulator.",s:"C, STM32/ESP32"},{t:"RTOS task project",w:"Multi-task firmware with FreeRTOS.",s:"FreeRTOS"},{t:"Protocol bring-up",w:"Drive a sensor over I2C/SPI; debug with a logic analyzer.",s:"I2C/SPI"}],apply:"Tier 1 after real-hardware repo; EV firms hiring (+54% QoQ)."},
+"QA / SDET":{proj:[{t:"Automation framework",w:"Build a Playwright framework with page objects + reporting.",s:"Playwright, JS/Py"},{t:"API test suite",w:"Automated assertions over a real API.",s:"REST, code"},{t:"CI integration",w:"Run the suite in GitHub Actions.",s:"CI"}],apply:"Tier 2 as an SDET (not manual) after the framework is live."},
+"Cybersecurity":{proj:[{t:"CTF write-ups",w:"Solve TryHackMe/HTB rooms and publish clean write-ups.",s:"pentest, write-up"},{t:"Cloud security lab",w:"Harden a small AWS/Azure deployment.",s:"cloud sec"},{t:"OWASP Top-10 demo",w:"Exploit + fix a deliberately vulnerable app.",s:"AppSec"}],apply:"Tier 1 with Security+; Tier 2 after public CTF proof."},
+"UI/UX Designer":{proj:[{t:"3 case studies",w:"Real problems → research → solution, with artifacts (not just screens).",s:"Figma, research"},{t:"Mini design system",w:"Tokens + components in Figma.",s:"design systems"},{t:"Usability test",w:"Test a flow with 5 users; iterate.",s:"usability"}],apply:"Tier 2 after 3 research-backed case studies."},
+"Product Manager":{proj:[{t:"Side project w/ real users",w:"Ship something small, get 20 users, measure.",s:"product, metrics"},{t:"Public product writing",w:"Teardown or PRD published online.",s:"writing"},{t:"Metric case study",w:"Define a north-star + funnel for a real product.",s:"analytics"}],apply:"APM programs after a shipped side project + writing."},
+"Business Analyst":{proj:[{t:"Requirements-to-spec",w:"Take a messy problem → BRD/PRD with process diagrams.",s:"BPMN, writing"},{t:"SQL + viz mini-project",w:"Answer a business question end to end.",s:"SQL, Power BI"},{t:"Domain immersion",w:"Go deep on BFSI/Health workflows.",s:"domain"}],apply:"Tier 1 after spec project; Tier 2 with SQL + product sense."},
+"Digital Marketing":{proj:[{t:"3 real campaigns",w:"Run real (even small-budget) Meta/Google campaigns; track ROAS.",s:"Meta/Google Ads, GA4"},{t:"ROAS case study",w:"Document spend → funnel → return.",s:"attribution"},{t:"CRO + funnel lab",w:"Improve a landing page conversion.",s:"CRO"}],apply:"Tier 2 after a real ROAS-led case study."}
+};
+var AGENT = {
+  unit:'role', dlname:'zapit_roadmap.txt',
+  info:{
+    what:"Your complete, all-in-one student roadmap for a role: what the role is, what they do, the skill plan, a 30/60/90-day schedule, project briefs with where to build them, and where to apply.",
+    why:"Good plans fail from week 3 — wrong milestones, no deployment gates, no clarity on where to actually do the work. This removes the guesswork end to end.",
+    features:["30 / 60 / 90-day plan: Foundation → Build → Job-Ready","Weekly action sheet — goals + recommended resources","One project deliverable per phase + where to build","End-of-phase checklists you can tick off","Resume checkpoints — what to add after each phase","Phase-3 interview-prep block + one-page cheat sheet","Pick one roadmap or download the whole catalogue"],
+    examples:["Backend: Day 0–30 fundamentals → Day 30–60 ship auth API → Day 60–90 cert + apply Tier 2","Frontend project 1: deploy a React dashboard on Vercel","ML/AI: roadmap centers on shipping one production RAG app"]
+  },
+  selector:{type:'roles',multi:true},
+  report:function(roles){
+    var exp=optVal('g_exp'), hrs=optVal('g_hrs');
+    var perWeek = hrs.indexOf('30')>-1?30 : hrs.indexOf('20')>-1?20 : hrs.indexOf('10')>-1?10 : 15;
+    var c=document.getElementById('reports-container');
+    var html='<div class="step-note">Tuned for: '+(exp||'Final-year')+' → ~'+perWeek+' hrs/week &nbsp; '+ZAP.indic('Indicative plan — adapt to your pace')+'</div>';
+    html+=ZAP.guideBox(true);
+    html+=glance3(roles, perWeek);
+    
+    html+='<div class="report-panel" id="rpanel-role">';
+    if(roles.length===1){
+      html+=renderRoadmap(roles[0], perWeek);
+    } else {
+      html+='<div class="report-sub-tabs">';
+      roles.forEach(function(rn,i){
+        html+='<button class="rsub'+(i===0?' active':'')+'" onclick="switchRoleTab('+i+')">'+ZAP.esc(rn)+'</button>';
+      });
+      html+='</div>';
+      roles.forEach(function(rn,i){
+        html+='<div class="role-panel'+(i===0?' active':'')+'" id="rp-'+i+'">';
+        html+=renderRoadmap(rn, perWeek);
+        html+='</div>';
+      });
+    }
+    html+='</div>';
+    
+    html+=ZAP.closeout(leadRec3(roles, perWeek).concat(RECS), {href:'09_vep.html',label:'Agent 09 · VEP — Build the projects',desc:'Your plan names the projects. Go build them with ready briefs + where to ship. Your role carries over.'}, window.__TK);
+    c.innerHTML=html;
+  },
+  dltext:function(roles){
+    var t='ZAP IT — Career Roadmap (30/60/90)\n'+'='.repeat(46)+'\n\n';
+    roles.forEach(function(rn){ var rm=RM[rn]; if(!rm) return; var s=ZAP.SKILLS[rn]||{primary:[],secondary:[],certs:[],trainings:[]};
+      var p1=topNames(s.primary,4), p2=topNames(s.secondary,3); var cert0=s.certs[0], train0=s.trainings[0];
+      t+=rn+'\n'+'-'.repeat(38)+'\n';
+      t+='CHEAT SHEET\n Learn first: '+p1.join(', ')+'\n Then: '+p2.join(', ')+'\n Do-first training: '+(train0?train0.n:'-')+'\n Top cert: '+(cert0?cert0.n:'-')+'\n\n';
+      t+='WEEKLY ACTION SHEET\n W1-2: primary basics ('+p1.slice(0,2).join(', ')+')\n W3-4: finish primaries + scaffold Project 1\n W5-6: build & deploy Project 1\n W7-8: secondary skills + start cert\n W9-10: Project 2 + READMEs\n W11-12: finish cert, resume, apply\n\n';
+      t+='PROJECTS\n'; rm.proj.forEach(function(p){ t+='  " '+p.t+' — '+p.w+' ['+p.s+']\n'; });
+      t+='\nEND-OF-PHASE CHECKLIST\n After 30d: basics + Git + green training started\n After 60d: Project 1 deployed (live URL) + cert started\n After 90d: Project 2 + cert done + resume updated + applied\n\n';
+      t+='RESUME CHECKPOINTS\n After 30d: skills + GitHub link\n After 60d: Project 1 live URL + metric\n After 90d: Project 2 + cert + summary line\n\n';
+      t+='Apply: '+rm.apply+'\n\n'+'='.repeat(38)+'\n\n';
+    });
+    return t;
+  }
+};
+window.switchRoleTab=function(idx){
+  document.querySelectorAll('.role-panel').forEach(function(p,i){ p.classList.toggle('active',i===idx); });
+  document.querySelectorAll('.rsub').forEach(function(b,i){ b.classList.toggle('active',i===idx); });
+};
+window.switchSTab=function(btn,id){
+  var nav=btn.parentNode;
+  var content=nav.nextElementSibling;
+  nav.querySelectorAll('.s-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  content.querySelectorAll('.s-panel').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById(id); if(t) t.classList.add('active');
+};
+function topNames(arr,n){ return arr.slice(0,n).map(function(x){return x.n;}); }
+function renderRoadmap(rn, perWeek){
+  var s=ZAP.SKILLS[rn], m=ZAP.MARKET[rn], rm=RM[rn];
+  if(!s||!rm) return '';
+  var p1=topNames(s.primary,4), p2=topNames(s.secondary,3);
+  var cert0=s.certs[0], train0=s.trainings[0];
+  var total=Math.round(perWeek*13);
+
+  // Bento Layout components
+  var vcls = (m && m.trend && /UP|HOT/i.test(m.trend)) ? 'vh-green' : 'vh-cyan';
+  var verdict = '<div class="verdict-col">' +
+    '<div class="verdict-hero ' + vcls + '">' +
+      '<div class="vh-lbl">ROADMAP SUMMARY</div>' +
+      '<div class="vh-val">90 DAYS</div>' +
+      '<div class="vh-sub">Tuned for ' + perWeek + ' hrs/week (' + total + ' hrs total). Deployed projects are required.</div>' +
+    '</div>' +
+  '</div>';
+  var kpis = ZAP.kpiRow([
+    {lbl:'PROJECTS TO SHIP', val:rm.proj.length + ' Builds', sub:' briefs + deploy info', cls:'demand'},
+    {lbl:'FIRST MILESTONE', val:'Day 30', sub:'foundations solid', cls:'pos'},
+    {lbl:'APPLY WINDOW', val:'Day 60–90', sub:'cv + references', cls:'trend'},
+    {lbl:'SUPPORT ITEMS', val:s.certs.length + ' certs', sub:'ROI prioritized', cls:'violet'}
+  ]);
+  var bento = '<div class="bento-snapshot">' + verdict + '<div class="data-col">' + kpis + ZAP.beginnerBox(rn) + '</div></div>';
+
+  var journey='<div class="journey">'+
+    '<div class="j-node done"><div class="jn-ico">▶</div><div class="jn-lbl">Role &amp; Skills</div></div><div class="j-arrow">➔</div>'+
+    '<div class="j-node active"><div class="jn-ico">▶</div><div class="jn-lbl">30 Days</div></div><div class="j-arrow">➔</div>'+
+    '<div class="j-node"><div class="jn-ico">▶</div><div class="jn-lbl">60 Days</div></div><div class="j-arrow">➔</div>'+
+    '<div class="j-node"><div class="jn-ico">▶</div><div class="jn-lbl">90 Days → Apply</div></div></div>';
+
+  var weekly=ZAP.table(['WEEK','GOAL / FOCUS','RECOMMENDED RESOURCES'],[
+    ['1–2','Primary basics: '+ZAP.esc(p1.slice(0,2).join(', ')),'Official docs + 1 free course (green training)'],
+    ['3–4','Finish primaries + scaffold Project 1','MDN / official docs + a crash course'],
+    ['5–6','Build &amp; <b>deploy</b> Project 1','Free deploy: Vercel / Render / Netlify'],
+    ['7–8','Secondary skills + start cert','Provider: '+(cert0?ZAP.esc(cert0.n):'Coursera / AWS / NPTEL')],
+    ['9–10','Project 2 + polish READMEs','GitHub README guide'],
+    ['11–12','Finish cert, update resume, apply','Resume Kit (Agent 05) + apply portals']
+  ]);
+
+  function chk(items){ return '<ul class="checklist">'+items.map(function(x){return '<li><span class="chk"></span><span>'+ZAP.esc(x)+'</span></li>';}).join('')+'</ul>'; }
+
+  var phase1=['Primary basics done: '+p1.slice(0,2).join(', '),'Git + GitHub + deploy account ready','Started green training: '+(train0?train0.n:'core project'),'Can explain core concepts out loud'];
+  var phase2=['Project 1 deployed with a live URL','Secondary skills added: '+p2.join(', '),'Cert started: '+(cert0?cert0.n:'role cert'),'README written for Project 1'];
+  var phase3=['Project 2 deployed','Cert finished + added to LinkedIn','Resume updated with both projects + metrics','Applied to the target list'];
+
+  var endCk='<h3 class="sub" style="margin-top:16px">✅ End-of-Phase Checklists</h3><div class="tl3"><div class="tl3-col"><div class="tl3-head d30">AFTER 30 DAYS</div><div class="tl3-body">'+chk(phase1)+'</div></div><div class="tl3-col"><div class="tl3-head d60">AFTER 60 DAYS</div><div class="tl3-body">'+chk(phase2)+'</div></div><div class="tl3-col"><div class="tl3-head d90">AFTER 90 DAYS</div><div class="tl3-body">'+chk(phase3)+'</div></div></div>';
+  var resumeCk='<h3 class="sub" style="margin-top:16px">▶ Resume Checkpoints <span class="htip">what to add after each phase</span></h3>'+ZAP.table(['PHASE','ADD TO YOUR RESUME'],[
+    ['After 30d','Skills section ('+ZAP.esc(p1.slice(0,3).join(', '))+') + GitHub link'],
+    ['After 60d','Project 1 with a <b>live URL</b> + one metric'],
+    ['After 90d','Project 2 + '+(cert0?ZAP.esc(cert0.n):'cert')+' + a sharp summary line']
+  ]);
+
+  var projCards=rm.proj.map(function(p,i){
+    var learn=p.s.split(',').map(function(t){return ZAP.linkName(t.trim());}).join(' → ');
+    return '<div class="acc-item"><div class="acc-hdr">▶ Project '+(i+1)+': '+ZAP.esc(p.t)+'<span class="acc-ico">v</span></div><div class="acc-body"><p>'+ZAP.esc(p.w)+'</p>'+
+      '<p style="margin-top:6px"><span class="tag tc">STACK</span> '+ZAP.esc(p.s)+'</p>'+
+      '<p style="margin-top:4px"><span class="tag tv">LEARN THE STACK →</span> '+learn+'</p>'+
+      '<p style="margin-top:4px"><span class="tag tg">WHERE</span> Build on <a class="zlink" href="https://github.com/new" target="_blank" rel="noopener">GitHub →</a>, deploy free on <a class="zlink" href="https://vercel.com" target="_blank" rel="noopener">Vercel →</a> / <a class="zlink" href="https://render.com" target="_blank" rel="noopener">Render →</a>, add the live URL to your CV.</p></div></div>';
+  }).join('');
+
+  var ip=['Explain '+(p1[0]||'your core skill')+' and where you used it','Walk through Project 1: problem → decision → result','One behavioural: "tell me about a challenge"','Why this role / company'];
+  var interviewBlock='<h3 class="sub" style="margin-top:16px">▶ Phase-3 Interview Prep <span class="htip">common questions for this role</span></h3>'+chk(ip);
+  var cheat='<div class="artifact-box" style="margin-top:16px"><div class="ab-label">📄 ONE-PAGE CHEAT SHEET</div><div class="ab-title">'+ZAP.esc(rn)+' — must-knows</div>'+
+    '<div class="ab-desc"><b>Learn first:</b> '+ZAP.esc(p1.join(', '))+'<br><b>Then:</b> '+ZAP.esc(p2.join(', '))+'<br><b>Do-first training:</b> '+ZAP.esc(train0?train0.n:'-')+'<br><b>Top cert:</b> '+ZAP.esc(cert0?cert0.n:'-')+'<br><b>Build:</b> '+ZAP.esc(rm.proj[0].t)+' → '+ZAP.esc(rm.proj[1]?rm.proj[1].t:'second project')+'<br><b>Apply:</b> '+ZAP.esc(rm.apply)+'</div>'+
+    '<button class="dl-btn" type="button" onclick="(function(){var d=document.getElementById(\'dl-btn\');if(d)d.click();})()"> Download this roadmap (.txt)</button></div>';
+
+  var id = rn.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
+  var deepDive = '<div class="deep-dive">' +
+    '<aside class="sidebar-nav">' +
+      '<button class="s-tab active" onclick="switchSTab(this, \''+id+'-plan\')">📅 30/60/90-Day Plan</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-projects\')">📁 Project Briefs</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-certs\')">🎓 Certs &amp; Trainings</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-interview\')">📝 Interview &amp; Cheat Sheet</button>' +
+    '</aside>' +
+    '<div class="sidebar-content">' +
+      '<div class="s-panel active" id="'+id+'-plan">' +
+        journey +
+        '<h3 class="sub" style="margin-top:14px">Skill Plan <span class="htip">from the Skill Matrix — learn in this order</span></h3>'+
+        '<div class="config-grid"><div class="rec-block" style="margin:6px 0"><div class="rb-label">PRIMARY (first)</div><div class="rb-body">'+p1.join(' → ')+'</div></div><div class="rec-block" style="margin:6px 0"><div class="rb-label">SECONDARY (next)</div><div class="rb-body">'+p2.join(' → ')+'</div></div></div>'+
+        '<h3 class="sub" style="margin-top:14px">30 / 60 / 90-Day Plan <span class="htip">~'+perWeek+' hrs/week</span></h3>'+
+        '<div class="tl3"><div class="tl3-col"><div class="tl3-head d30">DAYS 0–30 → FOUNDATIONS</div><div class="tl3-body">'+
+          '<div class="tl3-item">Lock primary skills: '+ZAP.esc(p1.join(', '))+'</div><div class="tl3-item">Set up Git + GitHub + a deploy account</div><div class="tl3-item">Start training: '+ZAP.esc(train0?train0.n:'core project')+'</div><div class="tl3-item">Milestone: environment + basics solid</div></div></div>'+
+          '<div class="tl3-col"><div class="tl3-head d60">DAYS 30–60 → BUILD</div><div class="tl3-body"><div class="tl3-item">Ship Project 1: '+ZAP.esc(rm.proj[0].t)+' (deploy live)</div><div class="tl3-item">Add secondary skills: '+ZAP.esc(p2.join(', '))+'</div><div class="tl3-item">Begin cert: '+ZAP.esc(cert0?cert0.n:'role cert')+'</div><div class="tl3-item">Milestone: 1 live project on CV</div></div></div>'+
+          '<div class="tl3-col"><div class="tl3-head d90">DAYS 60–90 → PROVE &amp; APPLY</div><div class="tl3-body"><div class="tl3-item">Ship Project 2: '+ZAP.esc(rm.proj[1]?rm.proj[1].t:'second project')+'</div><div class="tl3-item">Finish cert + add to LinkedIn</div><div class="tl3-item">Apply: '+ZAP.esc(rm.apply)+'</div><div class="tl3-item">Milestone: 2 projects + cert + applying</div></div></div></div>'+
+        '<h3 class="sub" style="margin-top:16px">▶ Weekly Action Sheet <span class="htip">goals + resources, week by week</span></h3>'+weekly+endCk+resumeCk+
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-projects">' +
+        '<h3 class="sub" style="margin-top:0">Project Briefs <span class="htip">tap to expand — includes where to build</span></h3>'+projCards+
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-certs">' +
+        '<h3 class="sub" style="margin-top:0">Certifications &amp; Trainings <span class="htip">tap any name to open it → — do the green first</span></h3>'+
+        '<div class="bar-wrap" style="padding:4px 0">'+
+          s.certs.map(function(x){return ZAP.skillLine(x,{cat:'CERT',prof:false});}).join('')+
+          s.trainings.map(function(x){return ZAP.skillLine(x,{cat:'TRAINING',prof:false});}).join('')+
+        '</div>'+
+        '<h3 class="sub" style="margin-top:12px">Where to Apply</h3><div class="success-box" style="margin-top:4px"><p>'+ZAP.esc(rm.apply)+'</p></div>'+
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-interview">' +
+        interviewBlock+cheat+
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  return '<div class="role-report" style="border:0;padding:0;">'+
+    '<h2 class="sec" style="margin:16px 0 10px">'+ZAP.esc(rn)+' — Roadmap</h2>'+
+    bento +
+    deepDive +
+    '</div>';
+}
+function glance3(roles, perWeek){
+  var rn=roles[0]; var s=ZAP.SKILLS[rn], rm=RM[rn]; if(!s||!rm) return '';
+  var total=Math.round(perWeek*13);
+  var cells=[
+    {l:'PLAN LENGTH',v:'90 days',s:'~'+perWeek+' hrs/week → ~'+total+' hrs total'},
+    {l:'PROJECTS TO SHIP',v:rm.proj.length,s:'briefs + where to build included'},
+    {l:'FIRST MILESTONE',v:'Day 30',s:'foundations: '+s.primary.slice(0,2).map(function(x){return x.n;}).join(', ')},
+    {l:'WHERE TO APPLY',v:'Day 60–90',s:(rm.apply||'').slice(0,46)}
+  ];
+  var glance='<div class="glance">'+cells.map(function(c){return '<div class="g-cell"><div class="g-lbl">'+c.l+'</div><div class="g-val">'+ZAP.esc(c.v)+'</div><div class="g-sub">'+ZAP.esc(c.s)+'</div></div>';}).join('')+'</div>';
+  var tk=['Phase gates: <b>learn → ship live → prove + apply</b>. Don\'t apply before one project is deployed.','Definition of done for every project = <b>deployed + URL on your CV</b>.','At ~'+perWeek+' hrs/week you can realistically ship <b>'+Math.min(rm.proj.length,2)+' projects</b> in 90 days.'];
+  window.__TK=tk; return glance;
+}
+function leadRec3(roles, perWeek){
+  var rm=RM[roles[0]]; if(!rm) return [];
+  return [{t:'This week: start Project 1 — '+rm.proj[0].t,b:rm.proj[0].w+' At ~'+perWeek+' hrs/week, scope it tiny and aim to deploy within 30 days. A live link is the single biggest fix for fresher rejections.'}];
+}
+var RECS=[
+  {t:"Follow the 30/60/90 gates: learn → ship live → prove + apply",b:"Each phase has a hard milestone. Don't start applying until at least one project is deployed."},
+  {t:"Treat 'deploy + add URL to CV' as the definition of done for every project",b:"Live URL beats local code every time. The project isn't finished until a recruiter can click it."},
+  {t:"Protect your weekly hours and check off milestones",b:"Use the checklist above. Consistent "+"~hours/week with visible milestones is what carries plans past week 3."}
+];
+
+/* ---- standard boot (identical across agents) ---- */
+(function(){
+  if(AGENT.info) ZAP.mountInfo('info', AGENT.info);
+  var s=AGENT.selector||{type:'roles',multi:true};
+  // chaining: restore role selection carried from a previous role-based agent
+  var restore=[];
+  if(s.type==='roles'){ var saved=ZAP.recall('roles'); if(saved&&saved.length){ restore=saved; ZAP.carryBanner('carryBanner', saved); } }
+  if(s.type==='roles') ZAP.mountRoles('roleGrid', {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel, restore:restore});
+  else ZAP.mountChips('roleGrid', s.items||[], {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel});
+  // prefill resume textarea if one exists and we have remembered resume text
+  var rt=document.getElementById('resumeText'); var savedResume=ZAP.recall('resume');
+  if(rt&&savedResume&&!rt.value) rt.value=savedResume;
+  // copt (Step 2) selection
+  document.addEventListener('click', function(e){
+    var o=e.target.closest && e.target.closest('.copt');
+    if(o){ var g=o.parentNode; g.querySelectorAll('.copt').forEach(function(x){x.classList.remove('active');}); o.classList.add('active'); }
+  });
+  window.optVal=function(id){ var e=document.querySelector('#'+id+' .copt.active'); return e?e.textContent.trim():''; };
+  function run(){
+    var sel=ZAP.selected('roleGrid');
+    if(!sel.length){ alert('Please select at least one '+(AGENT.unit||'role')+' first.'); return; }
+    // chaining: remember role selection + any resume text for the next agent
+    if(s.type==='roles'){ ZAP.remember('roles', sel); ZAP.remember('role', sel[0]); }
+    var rtx=document.getElementById('resumeText'); if(rtx&&rtx.value&&rtx.value.replace(/\s/g,'').length>40) ZAP.remember('resume', rtx.value);
+    ZAP.showReport();
+    AGENT.report(sel);
+    var dl=document.getElementById('dl-btn');
+    if(dl) dl.onclick=function(){ ZAP.download(AGENT.dlname||'zapit_report.txt', AGENT.dltext?AGENT.dltext(sel):JSON.stringify(sel)); };
+  }
+  document.getElementById('run-btn').addEventListener('click', run);
+})();
+</script>
+</body>
+</html>

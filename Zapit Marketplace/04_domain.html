@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Domain Readiness Kit — ZAP IT</title>
+<link rel="stylesheet" href="_shared.css">
+<style>.role-report{border:2px solid var(--border);border-top:4px solid var(--cyan);border-radius:8px;padding:24px;margin:16px 0}.tab-wrap{margin-top:4px}</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="brand">ZAP<em>IT</em></a>
+  <div class="topbar-right"><a href="index.html" class="tbtn">← All Agents</a></div>
+</div>
+<div class="wrap">
+  <div class="agent-hdr">
+    <div class="step-tag">AGENT 04 · DOMAIN KIT</div>
+    <div class="title-row"><div class="agent-ico">&#127981;</div><div><h1>Domain Readiness Kit</h1></div></div>
+    <div class="agent-desc">A crash-course kit on industries (domains) — what each one is in plain words, why companies now ask for it, the ecosystem at a glance, must-know terms, real use-cases, how your role fits, and a simple 4-week learning plan. Grab one or download them all.</div>
+  </div>
+  <div class="agent-info" id="info"></div>
+  <div class="config-panel">
+    <div class="config-panel-title"><span>&#9881;</span> Step 1 — Select Domain(s) <span class="rolecount" data-rolecount style="margin-left:8px">none selected</span></div>
+    <div class="step-note">Pick one or more domains, or “All Domains”. Optionally set your role in Step 2.</div>
+    <div id="carryBanner"></div>
+    <div class="role-grid" id="roleGrid"></div>
+    <div class="config-grid wide" style="margin-top:16px"><div class="cgrp"><label>=d Your role (optional — tailors the “how it attaches” note)</label><div class="copts" id="g_role"><div class="copt active">Any role</div><div class="copt">Frontend Dev</div><div class="copt">Backend Dev</div><div class="copt">Full Stack</div><div class="copt">Data Analyst</div><div class="copt">Data Scientist</div><div class="copt">Data Engineer</div><div class="copt">ML / AI Eng</div><div class="copt">DevOps / SRE</div><div class="copt">Cloud Eng</div><div class="copt">Mobile Dev</div><div class="copt">QA / SDET</div><div class="copt">Cybersecurity</div><div class="copt">UI/UX Designer</div><div class="copt">Product Manager</div><div class="copt">Business Analyst</div><div class="copt">Digital Marketing</div></div></div></div>
+    <button class="run-btn" id="run-btn">&#9889; Generate Domain Readiness</button>
+    <button type="button" class="dl-btn" style="margin-left:10px;vertical-align:middle" onclick="(function(){var a=document.querySelector('#roleGrid .all-roles');if(a&&!a.classList.contains('sel'))a.click();document.getElementById('run-btn').click();setTimeout(function(){var d=document.getElementById('dl-btn');if(d)d.click();},220);})()"> Download All Domains (bundle)</button>
+    <div class="run-note">Pick a domain tile to open one, or grab the full bundle. Runs fully offline.</div>
+  </div>
+  <div class="report-wrap" id="report-wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      <button class="dl-btn" id="dl-btn">&#11015; Download (.txt)</button>
+      <button class="nfbtn" onclick="window.print()">&#128424; Print</button>
+    </div>
+    <div id="reports-container"></div>
+  </div>
+  <div class="nav-footer">
+    <a class="nfbtn" href="index.html">← All Agents</a>
+    <a class="nfbtn primary" href="05_resumekit.html">Next: Resume Kit &rarr;</a>
+  </div>
+</div>
+<script src="_engine.js"></script>
+<script src="_skills.js"></script>
+<script>
+var REVENUE_MODELS = {
+  "FinTech": "<b>Revenue Engine:</b> Charges transaction fees (1–3% MDR) on money movement, subscription fees for credit risk SaaS, interest on direct consumer loans, and cross-sells mutual funds/insurance.",
+  "HealthTech": "<b>Revenue Engine:</b> Licenses Electronic Health Record (EHR) software to clinics via monthly SaaS, takes commission cuts (10–20%) on doctor consult fees, and marks up medicines.",
+  "SaaS / B2B": "<b>Revenue Engine:</b> Operates on recurring seat-based or volume-based pricing (per active API request, database read, or user account per month/year).",
+  "EdTech": "<b>Revenue Engine:</b> Individual course enrollment sales, recurring monthly/annual subscription fees for platform access, and enterprise/university licensing of LMS suites.",
+  "E-commerce / Retail": "<b>Revenue Engine:</b> Direct retail margins on sold goods, marketplace commission cuts (5–15%) on third-party orders, seller advertising space, and customer delivery subscriptions.",
+  "Logistics / Mobility": "<b>Revenue Engine:</b> Ride/delivery service fees, dynamic congestion surge fees, merchant listing and order commissions (15–25%), and in-app driver advertising.",
+  "Banking / BFSI": "<b>Revenue Engine:</b> Earns on Net Interest Margin (the difference between loan interest earned and deposit interest paid), account upkeep fees, and transaction charges.",
+  "Insurance / InsurTech": "<b>Revenue Engine:</b> Retains collected premium funds, earns underwriting margins (premiums minus payouts), and collects brokerage commissions on partner-branded products.",
+  "E-commerce / Retail (Quick-commerce)": "<b>Revenue Engine:</b> Fast-delivery convenience fees, dark-store warehouse fulfillment margins, catalog retail price markup, and featured brand sponsor placements.",
+  "Gaming / Media / OTT": "<b>Revenue Engine:</b> Ad-supported streaming streams (AVOD), monthly premium ad-free subscriptions (SVOD), and in-game micro-transactions (battle passes, cosmetic skins).",
+  "Telecom": "<b>Revenue Engine:</b> Monthly subscription tariff recharges (prepaid/postpaid), enterprise network bandwidth leases, fiber installation fees, and router/modem hardware sales.",
+  "Manufacturing / Industry 4.0": "<b>Revenue Engine:</b> Direct hardware/sensor sales, factory floor automation software licensing (MES/SCADA), and long-term predictive maintenance SLA contracts."
+};
+
+var TERM_DEFINITIONS = {
+  "UPI": "Unified Payments Interface - India's instant real-time bank-to-bank mobile payment system.",
+  "IMPS / NEFT": "IMPS is instant 24/7 bank transfer (up to 5L); NEFT is hourly batch-based clearing.",
+  "Settlement (T+1)": "Merchants receive customer payments settled into their accounts 1 business day after the order.",
+  "Reconciliation": "Comparing payment logs with bank statements to locate discrepancies and account for every rupee.",
+  "Idempotency": "API design ensuring duplicate requests (e.g. double tap) only execute once to prevent double debit.",
+  "Chargeback": "Cardholder disputes a transaction with their bank, forcing a refund debit from the merchant.",
+  "PCI-DSS": "Payment Card Industry Data Security Standard - security requirements for handling card details.",
+  "KYC / AML": "Know Your Customer & Anti-Money Laundering verification to prevent fraud and illegal money flows.",
+  "Ledger (double-entry)": "Bookkeeping system where debits must equal credits for error-free accounting.",
+  "Nodal account": "Mandated RBI bank account holding customer funds temporarily before aggregator settlement.",
+  "Payment gateway vs aggregator": "Gateway is payment data routing tech; Aggregator pools payment contracts to offer one integration.",
+  "Webhook": "HTTP POST callback sending automated real-time alerts to external systems (e.g. 'payment done').",
+  "Tokenization": "Replacing sensitive card data with a unique, secure token string to prevent theft.",
+  "Refund window": "Predefined timeline (e.g. 5-7 days) in which customer refund requests can be processed.",
+  "Escrow / float": "Funds held temporarily in trust by a third party before execution of contract terms.",
+  "2-Factor auth": "Enforcing two separate forms of identification (e.g., password + OTP) before approving action.",
+
+  "EHR / EMR": "Electronic Health/Medical Records - digital versions of patient history and clinical notes.",
+  "HIPAA": "US Health Insurance Portability and Accountability Act - privacy laws protecting patient data.",
+  "PHI (patient data)": "Protected Health Information - highly sensitive, regulated health records linked to patient identity.",
+  "Tele-consult": "Doctor-patient visits carried out remotely via video, audio, or text chat platforms.",
+  "e-Prescription": "Digital prescriptions transmitted electronically from physician directly to a pharmacy.",
+  "ICD codes": "International Classification of Diseases - global numeric codes for medical diagnostics.",
+  "HL7 / FHIR": "Standard protocols for securely exchanging electronic health records between hospital software systems.",
+  "Triage": "Assigning urgency degrees to patient illnesses/injuries to allocate medical care resource order.",
+  "Consent": "Explicit patient permission for sharing records, auditable via digital signatures.",
+  "De-identification": "Removing identifying personal data from health datasets to allow research use.",
+  "Clinical workflow": "Sequences of clinical activities (admission, vitals, diagnosis, discharge) mapped into software.",
+  "Interoperability": "The ability of distinct health software systems to share and understand patient records.",
+  "ABDM (India)": "Ayushman Bharat Digital Mission - standardizing digital healthcare infrastructure in India.",
+  "Audit trail": "Chronological records log showing exactly who accessed patient data and when.",
+  "RBAC": "Role-Based Access Control - restricting record access based on staff role (e.g. doctor vs receptionist).",
+  "Bias / fairness": "Ensuring diagnostic algorithms treat all demographic groups with equal accuracy.",
+
+  "Multi-tenancy": "Software architecture where one instance serves multiple customers (tenants) while isolating data.",
+  "Tenant isolation": "Techniques (separate database schemas/keys) ensuring tenants cannot access each other's data.",
+  "SSO / SAML": "Single Sign-On - authentication allowing a user to log in once to access a suite of apps.",
+  "Rate limiting": "Throttling API call volumes per user/key to protect systems from abuse or overload.",
+  "API versioning": "Maintaining multiple API versions (e.g., /v1/ vs /v2/) so updates don't break integrations.",
+  "Churn": "Percentage rate at which customers cancel their recurring subscription contracts.",
+  "MRR / ARR": "Monthly Recurring Revenue / Annual Recurring Revenue - primary metrics for SaaS growth.",
+  "Net revenue retention": "Percentage of subscription revenue retained from existing customers (including upgrades).",
+  "Usage metering": "Tracking consumption (API calls, bandwidth) to calculate custom variable bills.",
+  "SLA": "Service Level Agreement - contract committing to system uptime and response times (e.g., 99.9%).",
+  "Feature flags": "Turning software features on/off remotely for specific users without redeploying code.",
+  "Audit logs": "Immutable logs tracking admin and user actions for SaaS security and compliance audits.",
+  "Onboarding / activation": "The flow that guides a new user to complete their first valuable action in the software.",
+
+  "DAU / MAU": "Daily Active Users / Monthly Active Users - key metrics to track platform engagement trends.",
+  "Completion rate": "The percentage of students who successfully finish a course or learning module.",
+  "Cohort retention": "Measuring engagement patterns of distinct user sign-up groups over weeks or months.",
+  "Engagement": "Metrics tracking user interaction depth (time spent, lessons completed, comments).",
+  "LMS": "Learning Management System - platform used to deliver, track, and manage educational courses.",
+  "SCORM / xAPI": "Industry standards for packaging online learning content to run on any LMS.",
+  "Adaptive learning": "Algorithms that modify course speed or question difficulty in real time based on user scores.",
+  "Funnel / drop-off": "Mapping student steps from sign-up to graduation to spot where they stop learning.",
+  "A/B test": "Testing two versions of a screen to see which one gets higher course sign-ups or scores.",
+  "Live-class scale": "Architectural handling of video streaming and real-time chat for thousands of students.",
+  "Content pipeline": "The workflow of creating, reviewing, uploading, and tagging educational materials.",
+  "Gamification": "Adding game elements (points, badges, leaderboards) to increase course completion rates.",
+  "Push / nudge": "Sending timely notifications or emails to remind students to study.",
+  "Watch-time": "The total duration of video lectures streamed by learners, indicating engagement.",
+  "NPS": "Net Promoter Score - customer satisfaction metric measuring how likely users are to recommend the platform.",
+  "Personalisation": "Tailoring course recommendations and dashboard layout to a student's career target.",
+
+  "Catalog / SKU": "E-commerce database. Stock Keeping Unit (SKU) is a unique code for a specific item variant.",
+  "Search & ranking": "Retrieving and ordering products based on relevance, user clicks, and item availability.",
+  "Recommendations": "Algorithms suggesting products ('users who bought X also bought Y') to boost order values.",
+  "Cart": "Temporary storage holding items a user is preparing to purchase.",
+  "Checkout": "The multi-step transaction process: address selection, shipping choices, and payments.",
+  "Inventory": "Physical items currently in stock, locked during checkout to prevent double-selling.",
+  "Fulfilment": "The warehouse process of picking, packing, and dispatching orders for delivery.",
+  "Returns / RTO": "Return to Origin - shipping undelivered or returned items back to the warehouse.",
+  "Conversion rate": "Percentage of store visitors who complete a purchase.",
+  "AOV": "Average Order Value - average amount spent by customers per checkout transaction.",
+  "GMV": "Gross Merchandise Value - total sales value of merchandise sold over a period.",
+  "Peak / sale-day": "High-traffic sale events (e.g. Diwali sale) that stress server scalability.",
+  "CDN": "Content Delivery Network - caching product images and files close to users for fast loads.",
+  "Idempotent orders": "Ensuring duplicate order requests from a patchy network don't create multiple orders.",
+  "Payment retries": "Offering alternative gateway options when a transaction initially fails to save sales.",
+  "Pricing engine": "Dynamic calculation of discounts, promo codes, taxes, and shipping rates.",
+
+  "Dispatch": "Matching delivery orders or rides with the closest available drivers.",
+  "Routing": "Computing optimal streets routes for drivers to minimize travel distance and fuel.",
+  "ETA": "Estimated Time of Arrival - dynamic calculation based on real-time speeds and street traffic.",
+  "Geohash / geofencing": "Representing coordinates as text hashes, or setting virtual alerts around boundaries.",
+  "Real-time tracking": "Streaming GPS telemetry from driver to user app via persistent sockets.",
+  "Surge": "Dynamic pricing markup during periods of high ride demand and low driver supply.",
+  "Fleet": "The network of vehicles and drivers registered on the logistics platform.",
+  "Last-mile": "The final leg of a delivery from the local fulfillment hub directly to the customer's doorstep.",
+  "Event streaming": "Real-time processing of location coordinate events using stream brokers like Kafka.",
+  "Kafka": "High-throughput message broker used to ingest millions of driver location updates.",
+  "Map-matching": "Snapping raw GPS coordinates to actual roads to correct GPS noise.",
+  "Optimisation": "Mathematical solvers allocating resources (e.g., driver routes) to minimize business costs.",
+  "Reverse-geocode": "Converting GPS latitude/longitude coordinates back to a readable street address.",
+  "Heartbeat": "Regular ping signals sent by driver phones to indicate connection availability.",
+  "Backpressure": "Handling incoming location events when downstream databases are overloaded.",
+  "SLA": "Service Level Agreement - target delivery times (e.g. Swiggy/Zomato delivery in 30 mins).",
+
+  "Core Banking System (CBS)": "The central back-end database of a bank that updates accounts, balances, and deposits.",
+  "Net / mobile banking": "Digital client applications enabling customers to conduct financial transactions.",
+  "CASA account": "Current Account Saving Account - low-cost deposits that banks leverage for lending margins.",
+  "Cheque / clearing": "Verifying paper cheques and settling funds between bank accounts via CTS networks.",
+  "Regulatory reporting (RBI)": "Mandated financial status submissions banks must file to the central bank.",
+  "Fraud detection": "Real-time pattern checks (location flags, transaction sizes) to block suspicious activities.",
+  "Encryption": "Securing sensitive financial records from database to network packets.",
+
+  "Policy": "The legal insurance contract detailing coverages, terms, and deductibles.",
+  "Premium": "The regular amount paid by a policyholder to keep insurance coverage active.",
+  "Claim": "A formal request by a policyholder to the insurer for payout due to a covered loss.",
+  "Underwriting": "Assessing a client's risk profile to determine policy eligibility and premium cost.",
+  "FNOL (claim intake)": "First Notice of Loss - the initial report of an accident or loss to the insurer.",
+  "Sum insured": "The maximum financial value an insurer is liable to pay under a policy contract.",
+  "Deductible": "The out-of-pocket amount a policyholder pays before insurance coverage kicks in.",
+  "Actuary": "Statistics professionals who analyze risk datasets to set premium rates.",
+  "IRDAI": "Insurance Regulatory and Development Authority of India - regulatory body for insurance.",
+  "Risk pooling": "Grouping many individual risks together so payouts are funded by the premium pool.",
+  "Loss ratio": "Ratio of claims paid to premiums earned - key metric for insurance profitability.",
+  "Reinsurance": "Insurance bought by insurance companies to protect against massive catastrophes.",
+  "Endorsement": "A formal modification or addition to an active insurance policy contract.",
+  "Renewal": "Extending policy coverage period by paying the next premium cycle.",
+
+  "Quick-commerce (10-min)": "Ultra-fast delivery systems relying on localized dark stores near customer clusters.",
+  "Dark store": "Hyper-local micro-warehouses closed to consumers, optimized for picking orders in <2 mins.",
+
+  "Latency": "The time delay in network communications, critical for fast gameplay or streaming.",
+  "Streaming (HLS/DASH)": "Breaking video files into small segments to download and stream in real time.",
+  "Game loop": "The core code cycle (input → logic → render) running 60+ times per second in video games.",
+  "Netcode": "Networking synchronization code ensuring multiplayer players see the same state.",
+  "Live ops": "Running live updates, tournaments, and sales events inside games after release.",
+  "Monetisation (IAP/ads)": "In-app purchases (battle passes, items) and video advertisement models.",
+  "Concurrency": "Managing thousands of active, concurrent video streams or game sessions without server crashes.",
+
+  "SIM / IMEI": "Subscriber Identity Module (SIM) card and International Mobile Equipment Identity (IMEI) hardware number.",
+  "Bandwidth / latency": "Data volume capacity (bandwidth) and network travel time delays (latency).",
+  "OSS / BSS": "Operations Support Systems (network) and Business Support Systems (billing/CRM).",
+  "Billing / rating": "Rating is computing the price of network usage sessions; Billing is invoice compilation.",
+  "Provisioning": "Activating telecom network configurations to enable service on a user's SIM card.",
+  "ARPU": "Average Revenue Per User - key operational metric tracking average monthly subscription sales.",
+  "Network element": "Physical network nodes (routers, switches, towers) running software routing.",
+  "Roaming": "Enabling mobile services when traveling outside the home network area via partner towers.",
+  "VoLTE": "Voice over LTE - routing voice calls as digital packet data over 4G LTE networks.",
+  "Edge": "Processing network traffic at local edge towers to lower latency for 5G applications.",
+
+  "PLC / SCADA": "Programmable Logic Controllers (hardware switches) and Supervisory Control and Data Acquisition (monitoring).",
+  "MES": "Manufacturing Execution System - software tracking raw materials and production processes on shop floors.",
+  "ERP (SAP)": "Enterprise Resource Planning - software coordinating factory finance, inventory, and supply chain.",
+  "OEE": "Overall Equipment Effectiveness - measuring machine productivity: Availability × Performance × Quality.",
+  "Predictive maintenance": "Vibration/temperature sensors feeding ML models to predict failures before they happen.",
+  "Digital twin": "Real-time virtual simulation model of a factory floor machine or system.",
+  "Traceability": "Tracking the exact batch of raw materials used in every manufactured product for recalls."
+};
+
+var TALKING_ANSWERS = {
+  "FinTech": {
+    "How do you make a payment API idempotent?": "Generate a unique <code>idempotency-key</code> (UUID) on the client for each intent and send it in the headers. On the server, check Redis for the key: (1) if it exists and is processed, return the cached response; (2) if it is processing, block duplicate requests. If not found, lock the key, execute the charge, record the transaction in the DB, cache the result, and unlock.",
+    "What is reconciliation and why T+1 settlement?": "Reconciliation is the process of matching transaction logs from Payment Gateways, internal ledgers, and bank statements to ensure zero discrepancies. Settlements take T+1 (Transaction day + 1 business day) because banks settle transactions in batch clearings (NEFT/RTGS) overnight rather than in real time.",
+    "Walk me through a chargeback flow.": "A cardholder disputes a charge via their card issuer bank. The bank debits the aggregator's account. The aggregator sends an webhook warning to the merchant. The merchant submits proof (delivery receipts, chats) within 7–14 days. The bank reviews and decides whether to restore merchant funds or return it to the client.",
+    "How would you handle a duplicate payment?": "Block double requests at the API Gateway using user ID + request signature rate-limiting. Enable SQL transaction isolation (Serializable) to prevent race conditions during write checks, and verify payment state in the ledger before firing any capture call."
+  },
+  "HealthTech": {
+    "How do you protect PHI in an app?": "Encrypt PHI at rest using AES-256 and in transit via TLS 1.3. Enforce strict Role-Based Access Control (RBAC), generate immutable access audit logs, and mask identifiers (de-identification) on clinical data sent to diagnostic models.",
+    "What are FHIR / HL7 and why do they matter?": "They are standardized data exchange formats (JSON/XML models) for healthcare records. They ensure medical software systems can share patient records interoperably without data translation issues.",
+    "Design a patient-consent model.": "Store granular patient consent preferences (e.g., allow Dr. A to view prescriptions, block lab records) in a dedicated DB. Every clinical lookup checks this service, recording approvals/denials in an immutable audit trail.",
+    "What bias risks exist in a diagnostic model?": "If the model is trained on data from one demographic or clinic, it may exhibit high error rates when deployed elsewhere. Fix this by diversifying training sets and monitoring output metrics by cohort."
+  },
+  "SaaS / B2B": {
+    "Explain multi-tenant data isolation.": "Tenant data can be isolated at the database level (separate DB per customer), schema level (same DB, separate schemas), or database row level (shared table, filtering every query by a indexed tenant ID).",
+    "How do webhooks guarantee delivery?": "Implement an exponential backoff retry policy (e.g., retrying 5 times over 24 hours). The receiver must respond with a 2xx status, and developers verify payload signatures to prevent spoofing.",
+    "What drives SaaS churn?": "Poor customer onboarding, service downtime, slow API latency, lack of integrations, and pricing friction. These are identified by cohort tracking.",
+    "Design API rate limiting.": "Store API token limits in Redis using the Sliding Window Log or Token Bucket algorithm. Intercept requests at the gateway level, check user counts, reject overages with HTTP 429, and reset window keys."
+  },
+  "EdTech": {
+    "How do you measure learning engagement?": "Track Daily Active to Monthly Active User ratio (DAU/MAU), course completion rates, active streaks, average watch times, and assessment scores.",
+    "Why do learners drop off, and how to fix it?": "Motivations fade or content becomes too difficult. Fix by chunking courses into bite-sized lessons, sending streak nudges, and gamifying achievements.",
+    "How would you scale a live class to 100k?": "Broadcast video via HLS streaming over CDNs. Offload student chat sockets using Redis Pub/Sub, batching messages and throttling chat rates to prevent browser DOM crashes.",
+    "Design an A/B test for a lesson.": "Direct 50% of users to version A (video lecture first) and 50% to version B (interactive quiz first). Measure completion rate and score averages between the two groups."
+  },
+  "E-commerce / Retail": {
+    "How would you handle a 10× sale-day spike?": "Use CDN edge caching for product detail pages. Offload order checkouts asynchronously to message queues (Kafka/SQS) to process writes offline. Serve catalog queries via Redis replicas and run auto-scaling on stateless API servers.",
+    "Design a cart / order service.": "Store active shopping carts in Redis for fast updates. When checking out, call the Order service to verify inventory in an ACID SQL transaction. Lock items temporarily, charge the gateway, write order records, and clear the cart.",
+    "How does search ranking work?": "Combines text relevance indexing (Elasticsearch BM25 score) with business factors: availability flags, historical conversion rates, popularity trends, and price margins.",
+    "Why is idempotency vital in order placement?": "Patchy mobile networks prompt users to tap buy multiple times. Idempotency keys prevent processing duplicate orders, double-debiting bank accounts, and over-deducting warehouse inventory."
+  },
+  "Logistics / Mobility": {
+    "Design real-time order tracking.": "Stream coordinates from the driver's phone via WebSocket/MQTT to Kafka. Route updates to Redis Geospatial to calculate distance and push location updates to the customer's browser.",
+    "How is ETA computed?": "Calculated by Dijkstra/OSRM routing engines over street networks, continuously adjusted by traffic delays, historical speeds, weather factors, and coordinates mapping.",
+    "How do you handle GPS gaps / noise?": "Smooth raw GPS jumps using Kalman filters. Snap coordinates to actual road geometries using map-matching APIs (like OSRM Map Matching).",
+    "Scale a dispatch-matching system.": "Divide coordinates into hexagons using Uber's H3 index. Query driver locations within identical or adjacent H3 indexes in parallel, using local Redis indexes to match rides."
+  },
+  "Banking / BFSI": {
+    "What is KYC and why is it mandatory?": "Know Your Customer. A compliance check mandated by central banks (RBI) to verify client identities, stop identity theft, and prevent terrorist financing or tax evasion.",
+    "Difference between NEFT, IMPS and RTGS?": "NEFT is batch-processed hourly; IMPS is instant 24/7 (max ₹5L limit); RTGS is instant settlement for transactions over ₹2L with no maximum cap.",
+    "How do you keep a transaction accurate and auditable?": "Apply double-entry book ledgers where debits balance credits. Wrap DB updates in strict ACID transactions (Serializable level), and record logs in immutable, append-only logs.",
+    "What is an NPA?": "Non-Performing Asset. A loan account where interest or principal installments remain unpaid/overdue for 90 days or more."
+  },
+  "Insurance / InsurTech": {
+    "Walk me through a claims journey.": "The user submits photos and data (First Notice of Loss). The claim is routed via rules engine (triage). Adjusters or AI models verify damage values. Approvers check terms, premium status, and authorize payout.",
+    "What is underwriting?": "Evaluating a user's risk factors (age, medical records, driving records) against actuarial statistics to define their policy coverage eligibility and monthly premium rates.",
+    "How would you spot claims fraud?": "Check metadata of damage photo files for upload timing anomalies. Cross-reference coordinate logs with accident times, and flag claims submitted immediately after policy renewals.",
+    "Why does insurance need strong data accuracy?": "Policy premiums and payouts are calculated using precise metrics. Minor database errors can cause massive business losses, audit failures, or regulatory penalties."
+  },
+  "E-commerce / Retail (Quick-commerce)": {
+    "How would you handle a 10× sale-day spike?": "Pre-warm server instances, cache catalog databases in Redis, partition order databases by store location, queue checkouts, and disable slow user reviews or cart updates during high load.",
+    "Design a cart / order service.": "Hold cart data in Redis. Order checkout checks dark-store inventory count in an SQL transaction. Deduct inventory count, trigger the payment gateway, write the order, and clear the cart.",
+    "How does a 10-minute delivery model work?": "Uses hyper-local dark stores located near high-density residential areas. Dark-stores maintain narrow product catalogs, picking layouts optimize pick time (<2 mins), and drivers are assigned limited zones.",
+    "Why is idempotency vital in order placement?": "Patrons ordering outdoors have patchy mobile service and may resend checkouts. Idempotency keys prevent multiple dark stores from preparing duplicate delivery orders."
+  },
+  "Gaming / Media / OTT": {
+    "How do you measure engagement?": "Analyze platform retention metrics: Session frequency (DAU/MAU ratio), avg watch-time per session, churn rate, and in-app purchase conversion.",
+    "How does adaptive streaming work?": "Transcodes raw video into multiple resolution segments (HLS/DASH). The player monitors connection speeds and dynamically shifts to lower/higher bitrates to prevent playback stops.",
+    "How would you scale a live event to millions?": "Route video streams through multi-CDN edge servers. Cache video fragments close to users. Keep websocket chats stateless and queue messaging using batch writers.",
+    "Design a recommendation feed.": "Process user view history using matrix factorization. Match metadata tags (genres, actors) with profile tags, and boost new releases or trending videos using Redis scores."
+  },
+  "Telecom": {
+    "What are OSS and BSS?": "OSS (Operations Support Systems) monitors network status, outages, and links switches; BSS (Business Support Systems) manages customer logs, product packs, billing rates, and ordering.",
+    "How does mobile billing work?": "Telecom switches record call/data sessions in Call Detail Records (CDRs). Rating engines process CDR logs to apply charges based on the user's plan and generate billing balances.",
+    "How do you ensure billing accuracy at scale?": "Double-check switch logs against billing ledgers. Implement parallel rating engines with precise rounding rules, and audit reconciliations in batch runs daily.",
+    "What changes with 5G + IoT?": "Usage event counts scale by 100x due to tiny sensor updates. Requires real-time stream ingestion (Kafka), low latency billing engines, and edge computing nodes."
+  },
+  "Manufacturing / Industry 4.0": {
+    "What is OEE?": "Overall Equipment Effectiveness. A metric showing factory productivity computed as: Availability (operating time) × Performance (output speed) × Quality (good parts produced).",
+    "How does predictive maintenance work?": "IoT sensors stream machine telemetry (temperature, vibrations) to the cloud. Anomalies trigger alerts to replace parts before they snap, preventing downtime.",
+    "What is a digital twin?": "A virtual software replica of a physical machine or factory floor, mimicking its states and metrics via sensor integrations.",
+    "How do sensor → cloud → dashboard pipelines work?": "Sensors push metrics via MQTT protocol to gateways. Gateways stream updates to Kafka. Stream processors aggregate metrics, write to Time Series DB, and push to dashboards."
+  }
+};
+
+var DOMAIN_PROJECTS = {
+  "FinTech": [
+    {t:"Double-Entry Ledger Service",d:"Build a transaction ledger API that guarantees double-entry bookkeeping (sum of debits = credits) using transactional SQL. Support ledger transfers between accounts with check logic.",s:"Node.js/Java/Python, PostgreSQL, ACID isolation"},
+    {t:"Payment Webhook Aggregator",d:"Build an idempotent webhook listener that processes payment status events from Stripe/Razorpay. Save event logs, verify signature headers, and queue orders.",s:"FastAPI/Node, Redis, Webhooks"}
+  ],
+  "HealthTech": [
+    {t:"HIPAA-Compliant Patient Portal",d:"Build a patient appointment and EHR system featuring database field-level encryption, role-based access audits, and a patient-controlled data sharing interface.",s:"React, Node, AES-256, DB encryption"},
+    {t:"Tele-health Video Consultation Room",d:"Implement WebRTC video channels with patient consent prompts, auto-generates clinical notes summary after calls using NLP.",s:"WebRTC, Socket.io, NLP, Python"}
+  ],
+  "SaaS / B2B": [
+    {t:"Multi-Tenant Subscription Metering",d:"Build a billing engine that tracks user API usages (metering) and charges custom monthly fees based on tiered pricing schemas. Secure tenant isolation in DB.",s:"Next.js, PostgreSQL, Stripe Metered Billing"},
+    {t:"Webhook Delivery Engine",d:"Create an outbound webhook broker that dispatches payloads to tenants, handles exponential backoff retries on failure, and charts status dashboards.",s:"Node, Redis Queue, Event Streams"}
+  ],
+  "EdTech": [
+    {t:"Adaptive Quiz Assessment Engine",d:"Build an API that selects the next quiz question dynamically based on user's past answers score using tree logic. Charts streak cohorts.",s:"React, FastAPI, PostgreSQL"},
+    {t:"HLS Live Stream Chat Moderator",d:"Create a low-latency chat panel for live lectures. Throttles user posts, runs regex profanity filters, and batches messages to lower WebSocket overhead.",s:"Socket.io, Redis Pub/Sub, Node"}
+  ],
+  "E-commerce / Retail": [
+    {t:"Idempotent Checkout API",d:"Implement a checkout endpoint that locks stock quantities temporarily (pessimistic lock) and requires an idempotency key to prevent duplicate checkouts.",s:"Python/Spring Boot, Redis, PostgreSQL"},
+    {t:"Product Catalog Search",d:"Build a product index using Elasticsearch. Features search autocomplete, category filtering, and ranks search results using availability signals.",s:"Elasticsearch, Node, Docker"}
+  ],
+  "Logistics / Mobility": [
+    {t:"Real-time Vehicle Tracker",d:"Build an MQTT broker connection that streams mock vehicle coordinates, maps location paths, snaps to actual streets, and displays map tracking.",s:"MQTT, Socket.io, Leaflet.js"},
+    {t:"Hyper-local Hexagon Matcher",d:"Implement Uber H3 spatial index mapping. Groups drivers and passengers in hexagon grids, and dispatches matches to closest pairs.",s:"Node, H3-js, Geospatial Indexing"}
+  ],
+  "Banking / BFSI": [
+    {t:"ACID Core Banking Switch",d:"Build a money transfer switch API with double-entry ledgers, database transaction rollbacks, and transaction audit trails.",s:"Go/Java, PostgreSQL, ACID Transactions"},
+    {t:"AML Suspicious Transaction Engine",d:"Write a rules engine that filters transaction sizes, coordinate hops, and velocity checks to flag money laundering threats in real-time.",s:"FastAPI, Redis, SQL"}
+  ],
+  "Insurance / InsurTech": [
+    {t:"Claims Workflow Manager",d:"Build a First Notice of Loss (FNOL) workflow. Track upload of accident damage photos, run rules to triage claims, and route approvals.",s:"React, Node, PostgreSQL"},
+    {t:"Underwriting Quote Engine",d:"Create an API that calculates premium rates based on risk variables (age, habits, credit score) using statistical formulas.",s:"Flask, SQLite, math models"}
+  ],
+  "E-commerce / Retail (Quick-commerce)": [
+    {t:"Micro-Warehouse Picking API",d:"Build a dark-store stock management API. Generates optimized picking lists sorted by item category shelf locations for packers.",s:"Node, PostgreSQL, path search"},
+    {t:"Quick Delivery Dispatcher",d:"Create an endpoint that alerts delivery riders within a 2km geofence when orders are packed and aggregates deliveries.",s:"Express, Redis Geospatial, Geohash"}
+  ],
+  "Gaming / Media / OTT": [
+    {t:"Adaptive HLS Video Streaming player",d:"Set up HLS segments (m3u8), build a custom player UI that tracks player network health and toggles download resolution stream files.",s:"HTML5 Video, hls.js, Node"},
+    {t:"Real-Time Matchmaking Lobby",d:"Build a multiplayer matchmaking engine that groups active players in rooms based on skill scores (Elo rank) and ping latency.",s:"Socket.io, Redis, Node"}
+  ],
+  "Telecom": [
+    {t:"OSS/BSS CDR Rating Engine",d:"Process large Call Detail Records (CDR) logs in batches. Rates phone call sessions, maps calls to subscription limits, and compiles bills.",s:"Java/Scala, Spark/SQL, batch files"},
+    {t:"5G Edge Telemetry Collector",d:"Create a high-frequency socket pipeline that collects network tower telemetry data logs and triggers alerts on connection outages.",s:"Go, Kafka, InfluxDB"}
+  ],
+  "Manufacturing / Industry 4.0": [
+    {t:"OEE Machine Productivity Dashboard",d:"Collect machine SCADA metrics (availability, speed, defect count) and calculate OEE percentage in real-time dashboards.",s:"Python, MQTT, Grafana/SQL"},
+    {t:"Digital Twin Sensor simulator",d:"Write a script simulating temperature/vibration sensor signals, streams data via MQTT, and flags predictive maintenance alerts.",s:"Node, MQTT, time-series graphs"}
+  ]
+};
+
+/* Domain intelligence (indicative). */
+var DOMAINS = {
+"FinTech":{ico:"•",what:"Money movement, payments, lending, investing and the rails behind them — UPI, cards, wallets, broking, credit.",why:"FinTech interviews test whether you understand money, trust and compliance — not just code. A dev who knows what idempotency, reconciliation and PCI mean is hired over one who doesn't.",cos:"Razorpay → PhonePe → CRED → Zerodha → Groww → Paytm",expect:"Reliability mindset, security/PCI awareness, accuracy over speed, comfort with audit trails and edge cases (failed payments, refunds).",attach:[["Backend Dev","Builds payment APIs, ledgers, reconciliation — must reason about idempotency and consistency."],["Data Analyst","Transaction analytics, fraud signals, funnel drop-offs in checkout."],["Frontend Dev","Checkout and dashboard UIs where one bug = lost money or trust."]],plan:["Week 1: Learn payment basics — UPI flow, card lifecycle, refunds, chargebacks.","Week 2: Read about PCI-DSS, idempotency, reconciliation; note the vocabulary.","Week 3: Build a mock checkout/ledger project for your role.","Week 4: Write a short note on a real failure mode (e.g. duplicate payment) and how you'd handle it."]},
+"HealthTech":{ico:">z",what:"Software for hospitals, diagnostics, tele-health, insurance and patient data.",why:"Health data is sensitive and regulated. Companies want people who respect privacy (HIPAA-style thinking) and understand clinical workflows.",cos:"Practo → PharmEasy → 1mg → Innovaccer → HealthifyMe",expect:"Data privacy seriousness, reliability, empathy for clinical/patient workflows, careful handling of edge cases.",attach:[["Backend Dev","Patient records, appointment systems — privacy and uptime critical."],["Data Scientist","Diagnostic models, risk scoring — evaluation rigor and bias awareness matter."],["UI/UX Designer","Accessible flows for patients and clinicians under stress."]],plan:["Week 1: Learn the basics of health data privacy and why it's strict.","Week 2: Map a clinical workflow (e.g. tele-consult booking → consult → prescription).","Week 3: Build a privacy-conscious mini-project for your role.","Week 4: Document how you'd protect patient data in it."]},
+"SaaS / B2B":{ico:"•",what:"Software sold to businesses — CRMs, dev tools, collaboration, APIs. Subscription-driven.",why:"B2B SaaS rewards people who understand multi-tenancy, integrations, and that the user and the buyer differ. Strong written communication is prized.",cos:"Freshworks → Postman → Zoho → BrowserStack → Atlan",expect:"Integration thinking, reliability, clear docs/writing, understanding of customer success and churn.",attach:[["Backend Dev","Multi-tenant APIs, webhooks, integrations, rate limits."],["Product Manager","Balances buyer vs end-user needs; writes crisp specs."],["QA / SDET","Contract and integration testing across many customer setups."]],plan:["Week 1: Learn SaaS concepts — multi-tenancy, subscriptions, churn, integrations.","Week 2: Study one product's API docs (e.g. a public API) and how it's structured.","Week 3: Build an integration or API project for your role.","Week 4: Write clear documentation for it."]},
+"EdTech":{ico:"•",what:"Learning platforms, test-prep, upskilling, school/college software.",why:"EdTech values engagement and outcomes. Knowing how learners drop off and what drives completion sets candidates apart.",cos:"Unacademy → PhysicsWallah → Vedantu → upGrad → Teachmint",expect:"Engagement/retention thinking, content + tech blend, scale during peak hours, learner empathy.",attach:[["Frontend Dev","Interactive learning UIs, video, quizzes — engagement matters."],["Data Analyst","Completion funnels, engagement cohorts, A/B tests on lessons."],["Mobile Dev","Most learners are on mobile — performance and offline matter."]],plan:["Week 1: Learn engagement/retention metrics (DAU, completion, cohort retention).","Week 2: Study a learning product's funnel and where users drop.","Week 3: Build an engagement-focused mini-project for your role.","Week 4: Propose one experiment to improve completion."]},
+"E-commerce / Retail":{ico:"•",what:"Online shopping, marketplaces, logistics, inventory, seller tools.",why:"E-commerce is scale + speed. Understanding catalogs, search, carts, peak traffic (sale days) and logistics is the edge.",cos:"Flipkart → Meesho → Myntra → Nykaa → Zepto",expect:"Scale awareness, search/recommendation basics, peak-load thinking, conversion focus.",attach:[["Backend Dev","Catalog, cart, order management — scale and consistency."],["Data Scientist","Recommendations, demand forecasting, search ranking."],["Digital Marketing","Performance marketing, ROAS, conversion funnels."]],plan:["Week 1: Learn the e-commerce stack — catalog, search, cart, checkout, fulfilment.","Week 2: Study how a sale-day peak stresses systems.","Week 3: Build a catalog/search or recommendation mini-project.","Week 4: Note how you'd handle a 10→ traffic spike."]},
+"Logistics / Mobility":{ico:"•",what:"Delivery, ride-hailing, supply chain, fleet and routing software.",why:"Real-time, geo and optimization heavy. Candidates who grasp routing, ETAs and real-time tracking stand out.",cos:"Swiggy → Zomato → Ola → Delhivery → Rapido",expect:"Real-time systems thinking, geospatial basics, optimization, reliability under load.",attach:[["Backend Dev","Real-time tracking, dispatch, routing services."],["Data Engineer","Streaming location/event pipelines."],["Data Scientist","ETA prediction, demand/surge, route optimization."]],plan:["Week 1: Learn real-time + geospatial basics (tracking, ETAs, maps).","Week 2: Study how dispatch/routing works conceptually.","Week 3: Build a real-time or maps mini-project for your role.","Week 4: Describe a real-time failure mode and your fix."]},
+"Banking / BFSI":{ico:"•",what:"Banks and financial services — accounts, loans, cards, net-banking, core banking systems. The backbone of money in India.",why:"BFSI is the single biggest tech employer of freshers (TCS, Infosys, Coforge all run huge BFSI accounts). Knowing banking words instantly makes you useful on day one.",cos:"HDFC → ICICI → Coforge (BFSI) → TCS BFSI → Infosys Finacle",expect:"Accuracy, audit-trail discipline, security awareness, patience with regulation and legacy systems.",attach:[["Backend Dev","Core-banking APIs, transactions, interest calculation — correctness is everything."],["Business Analyst","Translates banking rules into specs; BFSI domain BAs are in huge demand."],["Data Analyst","Risk, fraud, customer 360, regulatory reporting."],["QA / SDET","Heavy regression testing — a wrong number is a real loss."],["Cloud Eng","Secure, compliant cloud migration of legacy banking systems."]],plan:["Week 1: Learn banking basics — accounts, KYC, NEFT/IMPS/RTGS, interest, EMI.","Week 2: Read how core banking + net-banking connect; note the vocabulary.","Week 3: Build a mini account/loan or statement project for your role.","Week 4: Write how you'd keep transactions accurate and auditable."]},
+"Insurance / InsurTech":{ico:"•",what:"Software for insurance — policies, claims, underwriting, premiums. Increasingly digital and AI-driven.",why:"Insurance is a massive, under-served tech domain; freshers who understand claims and underwriting stand out at services firms and InsurTech startups.",cos:"PolicyBazaar → Acko → Digit → Coforge (Insurance) → LTIMindtree",expect:"Process discipline, data accuracy, fraud awareness, comfort with rules-heavy workflows.",attach:[["Backend Dev","Policy + claims systems, premium calculation engines."],["Data Scientist","Underwriting risk models, claims-fraud detection."],["Business Analyst","Maps insurance processes to software — a top fresher entry path."],["Data Analyst","Claims analytics, loss ratios, customer segmentation."]],plan:["Week 1: Learn insurance basics — policy, premium, claim, underwriting, IRDAI.","Week 2: Map a claims journey (FNOL → assessment → settlement).","Week 3: Build a claims/policy mini-project for your role.","Week 4: Note one fraud signal and how you'd catch it."]},
+"E-commerce / Retail (Quick-commerce)":{ico:"•",what:"Online shopping, marketplaces, and 10-minute delivery — catalogs, search, carts, inventory, logistics.",why:"Scale + speed. Understanding catalogs, search, peak sale-days and quick-commerce delivery is a real edge for product companies.",cos:"Flipkart → Meesho → Myntra → Zepto → Blinkit → Nykaa",expect:"Scale awareness, search/recommendation basics, peak-load thinking, conversion focus.",attach:[["Backend Dev","Catalog, cart, order management at scale."],["Data Scientist","Recommendations, demand forecasting, search ranking."],["Frontend Dev","Fast, conversion-focused product + checkout UIs."],["Digital Marketing","Performance marketing, ROAS, conversion funnels."]],plan:["Week 1: Learn the stack — catalog, search, cart, checkout, fulfilment.","Week 2: Study how a sale-day or 10-min delivery peak stresses systems.","Week 3: Build a catalog/search or recommendation mini-project.","Week 4: Note how you'd handle a 10→ traffic spike."]},
+"Gaming / Media / OTT":{ico:"•",what:"Games, streaming, video, music and content platforms — engagement, recommendations, real-time and scale.",why:"India's gaming + OTT boom needs engineers who get engagement loops, streaming and recommendations. Fun domain, real demand.",cos:"Dream11 → Nazara → Hotstar → JioCinema → Gaana",expect:"Performance obsession, engagement/retention thinking, real-time and streaming basics.",attach:[["Game Dev","Gameplay, physics, multiplayer netcode."],["Frontend Dev","Smooth video/player and game UIs."],["Data Scientist","Recommendations, churn, matchmaking."],["DevOps / SRE","Scale + uptime for live events and launches."]],plan:["Week 1: Learn engagement metrics (DAU, retention, watch-time).","Week 2: Study how streaming/recommendations work conceptually.","Week 3: Build an engagement or player mini-project for your role.","Week 4: Propose one experiment to improve retention."]},
+"Telecom":{ico:"•",what:"Mobile networks, broadband, 5G, OSS/BSS billing systems — the rails that carry calls and data.",why:"Telecom hires heavily through services firms (Tech Mahindra, etc.). 5G + IoT make it a rising, under-crowded domain.",cos:"Jio → Airtel → Tech Mahindra → Nokia → Ericsson",expect:"Reliability at massive scale, billing accuracy, network/protocol awareness.",attach:[["Backend Dev","Billing (OSS/BSS), provisioning, usage systems."],["Embedded / IoT","Network devices, 5G/IoT edge firmware."],["Data Engineer","Huge network-event/telemetry pipelines."],["DevOps / SRE","Carrier-grade reliability and monitoring."]],plan:["Week 1: Learn telecom basics — SIM, network, data, OSS/BSS billing, 5G.","Week 2: Map a 'recharge → usage → bill' flow.","Week 3: Build a usage/billing mini-project for your role.","Week 4: Note how you'd keep billing accurate at scale."]},
+"Manufacturing / Industry 4.0":{ico:"•",what:"Smart factories, IoT sensors, supply chain, ERP — connecting machines and data on the shop floor.",why:"India's manufacturing push + Industry 4.0 means demand for engineers who blend IoT, data and ERP. Strong at services + product firms.",cos:"Bosch → Tata Elxsi → L&T Tech → Siemens → SAP partners",expect:"Reliability, IoT + data sense, ERP awareness, safety mindset.",attach:[["Embedded / IoT","Sensor + machine firmware on the factory floor."],["Data Engineer","Machine-telemetry pipelines for analytics."],["Backend Dev","ERP/MES integration, supply-chain systems."],["Data Scientist","Predictive maintenance, quality/defect models."]],plan:["Week 1: Learn Industry 4.0 basics — IoT, sensors, MES, ERP, OEE.","Week 2: Map a 'sensor → cloud → dashboard' data flow.","Week 3: Build an IoT/telemetry mini-project for your role.","Week 4: Note one predictive-maintenance idea."]}
+};
+/* ===== Full domain packs (terms / process / compliance / use-cases / talking points) ===== */
+var DOMAIN_PACK={
+"FinTech":{terms:["UPI","IMPS / NEFT","Settlement (T+1)","Reconciliation","Idempotency","Chargeback","PCI-DSS","KYC / AML","Ledger (double-entry)","Nodal account","Payment gateway vs aggregator","Webhook","Tokenization","Refund window","Escrow / float","2-Factor auth"],process:["Customer initiates payment","Gateway / PSP authorises","Bank or UPI switch processes","Success / failure callback (webhook)","Settlement to merchant (T+1)","Reconciliation & reporting"],compliance:["RBI PA/PG guidelines for payment aggregators","PCI-DSS for storing/handling card data","KYC / AML checks on onboarding"],usecases:["Payment gateway integration","Fraud-detection signal engine","Automated reconciliation","Lending credit-scoring model"],talking:["How do you make a payment API idempotent?","What is reconciliation and why T+1 settlement?","Walk me through a chargeback flow.","How would you handle a duplicate payment?"]},
+"HealthTech":{terms:["EHR / EMR","HIPAA","PHI (patient data)","Tele-consult","e-Prescription","ICD codes","HL7 / FHIR","Triage","Consent","De-identification","Clinical workflow","Interoperability","ABDM (India)","Audit trail","RBAC","Bias / fairness"],process:["Patient registration","Appointment / tele-consult","Diagnosis & clinical notes","e-Prescription issued","Pharmacy / lab fulfilment","Records, billing & follow-up"],compliance:["HIPAA-style privacy for PHI","India ABDM / DISHA data norms","Consent capture & full audit trails"],usecases:["Appointment & EHR systems","Diagnostic ML risk scoring","Tele-health video flows","Insurance claim processing"],talking:["How do you protect PHI in an app?","What are FHIR / HL7 and why do they matter?","Design a patient-consent model.","What bias risks exist in a diagnostic model?"]},
+"SaaS / B2B":{terms:["Multi-tenancy","Tenant isolation","RBAC","SSO / SAML","Webhooks","Rate limiting","API versioning","Idempotency","Churn","MRR / ARR","Net revenue retention","Usage metering","SLA","Feature flags","Audit logs","Onboarding / activation"],process:["Lead captured","Trial / self-serve onboarding","Activation (first value)","Expansion / upsell","Renewal","Churn or win-back"],compliance:["SOC 2 controls","GDPR for customer data","Data residency by region"],usecases:["Multi-tenant API platform","Billing & usage metering","Integration / webhook system","Admin & RBAC console"],talking:["Explain multi-tenant data isolation.","How do webhooks guarantee delivery?","What drives SaaS churn?","Design API rate limiting."]},
+"EdTech":{terms:["DAU / MAU","Completion rate","Cohort retention","Engagement","LMS","SCORM / xAPI","Adaptive learning","Funnel / drop-off","A/B test","Live-class scale","Content pipeline","Gamification","Push / nudge","Watch-time","NPS","Personalisation"],process:["Discover course","Enroll","Learn (live / recorded)","Practice & assess","Complete / certify","Retain / re-engage"],compliance:["Child data (COPPA-style)","Content IP / licensing","Accessibility (WCAG)"],usecases:["Live-class streaming at scale","Adaptive quiz engine","Engagement analytics","Mobile & offline learning"],talking:["How do you measure learning engagement?","Why do learners drop off, and how to fix it?","How would you scale a live class to 100k?","Design an A/B test for a lesson."]},
+"E-commerce / Retail":{terms:["Catalog / SKU","Search & ranking","Recommendations","Cart","Checkout","Inventory","Fulfilment","Returns / RTO","Conversion rate","AOV","GMV","Peak / sale-day","CDN","Idempotent orders","Payment retries","Pricing engine"],process:["Browse / search","Add to cart","Checkout & pay","Order & inventory update","Fulfilment & delivery","Returns / refunds"],compliance:["Consumer-protection rules","Marketplace / pricing norms","Payment PCI-DSS"],usecases:["Search & recommendation engine","Cart / order service","Inventory management","Demand forecasting"],talking:["How would you handle a 10→ sale-day spike?","Design a cart / order service.","How does search ranking work?","Why is idempotency vital in order placement?"]},
+"Logistics / Mobility":{terms:["Dispatch","Routing","ETA","Geohash / geofencing","Real-time tracking","Surge","Fleet","Last-mile","Event streaming","Kafka","Map-matching","Optimisation","Reverse-geocode","Heartbeat","Backpressure","SLA"],process:["Order / booking placed","Match & dispatch","Route & navigate","Live tracking","Delivery / drop-off","Settlement"],compliance:["Driver / rider data privacy","Location-data handling","Labour / gig norms"],usecases:["Real-time order tracking","Dispatch / matching engine","ETA prediction model","Streaming location pipeline"],talking:["Design real-time order tracking.","How is ETA computed?","How do you handle GPS gaps / noise?","Scale a dispatch-matching system."]},
+"Banking / BFSI":{terms:["KYC / AML","NEFT / IMPS / RTGS","Core Banking System (CBS)","Net / mobile banking","Ledger","Interest / EMI","NPA","Audit trail","Two-factor auth","Reconciliation","CASA account","Cheque / clearing","Regulatory reporting (RBI)","Fraud detection","Encryption","Idempotency"],process:["Customer onboarding (KYC)","Account opened in core banking","Transactions (deposit / transfer / pay)","Interest / charges applied","Reconciliation & audit","Regulatory reporting"],compliance:["RBI guidelines & reporting","KYC / AML checks","Data security & audit trails"],usecases:["Net-banking / UPI integration","Loan / EMI calculation engine","Fraud-detection system","Regulatory reporting automation"],talking:["What is KYC and why is it mandatory?","Difference between NEFT, IMPS and RTGS?","How do you keep a transaction accurate and auditable?","What is an NPA?"]},
+"Insurance / InsurTech":{terms:["Policy","Premium","Claim","Underwriting","FNOL (claim intake)","Sum insured","Deductible","Actuary","IRDAI","Risk pooling","Loss ratio","Reinsurance","Fraud detection","Endorsement","Renewal","Settlement"],process:["Quote & buy policy","Underwriting & pricing","Policy issued","Claim filed (FNOL)","Assessment & approval","Settlement / payout"],compliance:["IRDAI regulations","Customer data privacy","Fair-claims & audit norms"],usecases:["Policy management system","Claims processing workflow","Underwriting risk model","Fraud-detection engine"],talking:["Walk me through a claims journey.","What is underwriting?","How would you spot claims fraud?","Why does insurance need strong data accuracy?"]},
+"E-commerce / Retail (Quick-commerce)":{terms:["Catalog / SKU","Search & ranking","Recommendations","Cart","Checkout","Inventory","Fulfilment","Returns / RTO","Conversion rate","AOV","GMV","Peak / sale-day","Quick-commerce (10-min)","Dark store","Idempotent orders","Pricing engine"],process:["Browse / search","Add to cart","Checkout & pay","Order & inventory update","Fulfilment & delivery","Returns / refunds"],compliance:["Consumer-protection rules","Marketplace / pricing norms","Payment PCI-DSS"],usecases:["Search & recommendation engine","Cart / order service","Inventory & dark-store management","Demand forecasting"],talking:["How would you handle a 10→ sale-day spike?","Design a cart / order service.","How does a 10-minute delivery model work?","Why is idempotency vital in order placement?"]},
+"Gaming / Media / OTT":{terms:["DAU / MAU","Retention","Watch-time","Recommendations","Matchmaking","Latency","CDN","Streaming (HLS/DASH)","Game loop","Netcode","Live ops","Monetisation (IAP/ads)","Engagement","Personalisation","Concurrency","A/B test"],process:["Discover content / game","Onboard / sign-up","Engage (play / watch)","Personalise & recommend","Monetise (ads / IAP / subscription)","Retain / re-engage"],compliance:["Content rating & age-gating","Real-money gaming rules (India)","Content IP / licensing"],usecases:["Recommendation engine","Live multiplayer / matchmaking","Adaptive video streaming","Engagement analytics"],talking:["How do you measure engagement?","How does adaptive streaming work?","How would you scale a live event to millions?","Design a recommendation feed."]},
+"Telecom":{terms:["SIM / IMEI","2G/4G/5G","Bandwidth / latency","OSS / BSS","Billing / rating","Provisioning","Churn","ARPU","Network element","Roaming","VoLTE","IoT / M2M","SLA","Outage / incident","Telemetry","Edge"],process:["Customer onboarding (SIM)","Service provisioning","Network usage","Rating & billing","Payment / recharge","Support & churn management"],compliance:["TRAI regulations","Lawful-intercept & data rules","Billing-accuracy norms"],usecases:["OSS/BSS billing system","Usage / telemetry pipeline","Network monitoring dashboard","5G / IoT edge service"],talking:["What are OSS and BSS?","How does mobile billing work?","How do you ensure billing accuracy at scale?","What changes with 5G + IoT?"]},
+"Manufacturing / Industry 4.0":{terms:["IoT sensor","PLC / SCADA","MES","ERP (SAP)","OEE","Predictive maintenance","Digital twin","Supply chain","Telemetry","Edge computing","Quality / defect","Throughput","Downtime","Lean / Kaizen","Traceability","Safety"],process:["Raw material in","Production (machines + sensors)","Quality check","MES / ERP records","Analytics & maintenance","Dispatch & supply chain"],compliance:["Safety & ISO standards","Data integrity / traceability","Industrial cyber-security"],usecases:["IoT telemetry pipeline","Predictive-maintenance model","MES / ERP integration","Quality-defect detection"],talking:["What is OEE?","How does predictive maintenance work?","What is a digital twin?","How do sensor → cloud → dashboard pipelines work?"]}
+};
+var AGENT = {
+  unit:'domain', dlname:'zapit_domain_readiness.txt',
+  info:{
+    what:"An industry/domain primer: what each domain (FinTech, HealthTech, SaaS, EdTech, E-commerce, Logistics) is, why companies now ask for domain understanding, and how tech roles attach to it.",
+    why:"Tech skills pass the coding round but domain blindness fails the culture/fit round at Tier-2 companies. Companies increasingly hire for domain context, not just code.",
+    features:["Domain primer in plain language","Must-know terms cheat sheet (15–18 per domain)","Core business process map","Compliance snapshot — the rules that matter","Typical IT project use-cases","Interview talking points","One-page summary + 4-week immersion plan","Download a single domain or the whole bundle"],
+    examples:["FinTech rewards reliability + PCI/idempotency vocabulary","HealthTech tests privacy seriousness (HIPAA-style thinking)","Logistics is real-time + geospatial — ETAs, routing, tracking"]
+  },
+  selector:{type:'chips', items:Object.keys(DOMAINS).map(function(k){return {n:k, ico:""};}), multi:true, allLabel:'All Domains'},
+  report:function(domains){
+    var role=optVal('g_role');
+    var c=document.getElementById('reports-container');
+    var html='<div class="step-note">'+(role&&role!=='Any role'?('Tailored note for: '+role):'General view — pick a role in Step 2 for a tailored note')+' &nbsp; '+ZAP.indic('Indicative domain guidance')+'</div>';
+    html+=domainIntro();
+    html+=glance4(domains, role);
+    
+    html+='<div class="report-panel" id="rpanel-role">';
+    if(domains.length===1){
+      html+=renderDomain(domains[0], role);
+    } else {
+      html+='<div class="report-sub-tabs">';
+      domains.forEach(function(dn,i){
+        html+='<button class="rsub'+(i===0?' active':'')+'" onclick="switchRoleTab('+i+')">'+ZAP.esc(dn)+'</button>';
+      });
+      html+='</div>';
+      domains.forEach(function(dn,i){
+        html+='<div class="role-panel'+(i===0?' active':'')+'" id="rp-'+i+'">';
+        html+=renderDomain(dn, role);
+        html+='</div>';
+      });
+    }
+    html+='</div>';
+    
+    html+=ZAP.closeout(RECS, {href:'05_resumekit.html',label:'Agent 05 · Resume Kit',desc:'Now bake your domain vocabulary into your resume — the kit shows you where it goes.'}, window.__TK);
+    c.innerHTML=html;
+  },
+  dltext:function(domains){
+    var t='ZAP IT — Domain Readiness\n'+'='.repeat(46)+'\n\n';
+    domains.forEach(function(dn){ var d=DOMAINS[dn]; if(!d) return; var p=DOMAIN_PACK[dn]||{};
+      t+=dn+'\n'+'-'.repeat(38)+'\n';
+      t+='PRIMER: '+d.what+'\nWHY IT WINS: '+d.why+'\nCOMPANIES: '+d.cos+'\nTHEY EXPECT: '+d.expect+'\n\n';
+      if(p.terms) t+='MUST-KNOW TERMS: '+p.terms.join(', ')+'\n\n';
+      if(p.process) t+='PROCESS MAP: '+p.process.join(' -> ')+'\n\n';
+      if(p.compliance) t+='COMPLIANCE: '+p.compliance.join('; ')+'\n\n';
+      if(p.usecases) t+='IT USE-CASES: '+p.usecases.join(', ')+'\n\n';
+      if(p.talking) t+='INTERVIEW TALKING POINTS:\n - '+p.talking.join('\n - ')+'\n\n';
+      t+='4-WEEK PLAN:\n - '+d.plan.join('\n - ')+'\n\n'+'='.repeat(38)+'\n\n';
+    });
+    return t;
+  }
+};
+window.switchRoleTab=function(idx){
+  document.querySelectorAll('.role-panel').forEach(function(p,i){ p.classList.toggle('active',i===idx); });
+  document.querySelectorAll('.rsub').forEach(function(b,i){ b.classList.toggle('active',i===idx); });
+};
+window.switchSTab=function(btn,id){
+  var nav=btn.parentNode;
+  var content=nav.nextElementSibling;
+  nav.querySelectorAll('.s-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  content.querySelectorAll('.s-panel').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById(id); if(t) t.classList.add('active');
+};
+function renderDomain(dn, role){
+  var d=DOMAINS[dn], p=DOMAIN_PACK[dn]; if(!d||!p) return '';
+  var attach=d.attach.map(function(a){
+    var hi = (role&&a[0]===role) ? ' style="border-color:var(--cyan);background:var(--cyan-bg)"' : '';
+    return '<div class="acc-item"><div class="acc-hdr"'+hi+'>'+ZAP.esc(a[0])+(role&&a[0]===role?' 📌 your role':'')+'<span class="acc-ico">▼</span></div><div class="acc-body" style="padding:14px 16px;background:var(--bg-base)">'+ZAP.esc(a[1])+'</div></div>';
+  }).join('');
+  var plan=d.plan.map(function(p,i){return '<div class="tl3-item">'+ZAP.esc(p)+'</div>';}).join('');
+  
+  // Bento snap components
+  var verdict = '<div class="verdict-col">' +
+    '<div class="verdict-hero vh-green">' +
+      '<div class="vh-lbl">DOMAIN PRIMARY</div>' +
+      '<div class="vh-val">' + ZAP.esc(dn) + '</div>' +
+      '<div class="vh-sub">' + ZAP.esc(d.what.split('.')[0] + '.') + '</div>' +
+    '</div>' +
+  '</div>';
+  var kpis = ZAP.kpiRow([
+    {lbl:'TARGET COMPANIES', val:d.cos.split(' → ').length + ' Open', sub:'example hires', cls:'demand'},
+    {lbl:'EXPECTATION', val:d.expect.split(',')[0], sub:'industry benchmark', cls:'pos'},
+    {lbl:'KEYWORDS', val:p.terms.length + ' Terms', sub:'industry vocabulary', cls:'trend'},
+    {lbl:'PREP PLAN', val:'4 Weeks', sub:'immersion modules', cls:'violet'}
+  ]);
+  var bento = '<div class="bento-snapshot">' + verdict + '<div class="data-col">' + kpis + '<div class="wow" style="margin:0"><div class="lbl">WHAT THEY EXPECT</div><p>' + ZAP.esc(d.expect) + '</p></div>' + '</div></div>';
+
+  var id = dn.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
+  var revModel = REVENUE_MODELS[dn] || "No custom business model defined.";
+
+  var jargonTable = '<table class="t"><thead><tr><th>TERM</th><th>WHAT IT MEANS (IN PLAIN ENGLISH)</th></tr></thead><tbody>'+
+    p.terms.map(function(t){
+      var def = TERM_DEFINITIONS[t] || "Domain-specific term. Click link below to query search.";
+      return '<tr><td><b>'+ZAP.linkName(t)+'</b></td><td>'+ZAP.esc(def)+'</td></tr>';
+    }).join('')+
+    '</tbody></table>';
+
+  var projs = DOMAIN_PROJECTS[dn] || [];
+  var projectCards = projs.map(function(proj, i){
+    return '<div class="acc-item">'+
+      '<div class="acc-hdr">📁 Project '+(i+1)+': '+ZAP.esc(proj.t)+'<span class="acc-ico">▼</span></div>'+
+      '<div class="acc-body" style="padding:14px 16px;background:var(--bg-base)">'+
+        '<p style="font-size:13px;line-height:1.6;color:var(--text-body);margin-bottom:8px">'+ZAP.esc(proj.d)+'</p>'+
+        '<p style="margin-top:6px;font-size:12px"><span class="tag tc">STACK</span> '+ZAP.esc(proj.s)+'</p>'+
+      '</div>'+
+      '</div>';
+  }).join('');
+
+  var talkingCards = p.talking.map(function(q){
+    var answer = (TALKING_ANSWERS[dn] && TALKING_ANSWERS[dn][q]) || "No model answer provided yet.";
+    return '<div class="flashcard">'+
+      '<div class="fc-q">'+ZAP.esc(q)+'</div>'+
+      '<div class="fc-ans">'+answer+'</div>'+
+      '<button class="reveal-btn" type="button" style="margin-top:8px">Show Answer</button>'+
+      '</div>';
+  }).join('');
+
+  var deepDive = '<div class="deep-dive">' +
+    '<aside class="sidebar-nav">' +
+      '<button class="s-tab active" onclick="switchSTab(this, \''+id+'-primer\')">📊 Primer &amp; Business Model</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-eco\')">🌐 Tech Ecosystem Map</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-roles\')">👥 Tech Roles Attachment</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-terms\')">📚 Must-Know Jargon Decoder</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-process\')">🔄 Process &amp; Compliance</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-usecases\')">🎯 Domain Projects</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-talking\')">📝 Interview Q&amp;A Flashcards</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-plan\')">📅 4-Week Study Plan</button>' +
+    '</aside>' +
+    '<div class="sidebar-content">' +
+      '<div class="s-panel active" id="'+id+'-primer">' +
+        bento +
+        '<h3 class="sub" style="margin-top:20px">💼 Business &amp; Revenue Model</h3><div class="wow" style="margin:6px 0"><p>'+revModel+'</p></div>'+
+        '<h3 class="sub" style="margin-top:20px">🏢 Example Companies '+ZAP.indic('Indicative')+'</h3><p style="font-size:13px;color:var(--slate)">'+ZAP.esc(d.cos)+'</p>'+
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-eco">' +
+        ecosystem(dn) +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-roles">' +
+        '<h3 class="sub" style="margin-top:0">How Tech Roles Attach <span class="htip">tap a role — every role has a place in this domain</span></h3>'+attach+
+        '<p class="step-note">Don\'t see your exact role? Every role plugs in somewhere — the closest matches above show the pattern, and the terms + use-cases below apply to all of them.</p>'+
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-terms">' +
+        '<h3 class="sub" style="margin-top:0">📚 Must-Know Jargon Decoder <span class="htip">definitions side-by-side — click term to open free tutorial</span></h3>'+
+        jargonTable +
+        '<h3 class="sub" style="margin-top:20px">🔗 Quick Search Chips</h3><p>'+p.terms.map(function(t){return ZAP.linkChip(t,'tc');}).join(' ')+'</p>'+
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-process">' +
+        '<h3 class="sub" style="margin-top:0"> Core Business Process Map</h3><div class="journey">'+p.process.map(function(s,i){return (i?'<span class="j-arrow">→</span>':'')+'<div class="j-node"><div class="jn-ico">'+(i+1)+'</div><div class="jn-lbl">'+ZAP.esc(s)+'</div></div>';}).join('')+'</div>'+
+        '<h3 class="sub" style="margin-top:20px"> Compliance Snapshot <span class="htip">the 2–3 rules that matter</span></h3><div class="risk"><div class="lbl">REGULATIONS TO NAME-DROP</div><ul class="checklist">'+p.compliance.map(function(c){return '<li><span class="chk"></span><span>'+ZAP.esc(c)+'</span></li>';}).join('')+'</ul></div>'+
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-usecases">' +
+        '<h3 class="sub" style="margin-top:0">📁 Domain Projects <span class="htip">detailed briefs for your portfolio</span></h3>'+projectCards+
+        '<h3 class="sub" style="margin-top:20px">🔧 Typical IT Use-Cases</h3><ul class="checklist">'+p.usecases.map(function(u){return '<li><span class="chk"></span><span>'+ZAP.esc(u)+'</span></li>';}).join('')+'</ul>'+
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-talking">' +
+        '<h3 class="sub" style="margin-top:0">📝 Interview Q&amp;A Flashcards <span class="htip">common questions + model developer responses</span></h3>'+talkingCards+
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-plan">' +
+        '<h3 class="sub" style="margin-top:0">4-Week Domain Immersion Plan</h3><div class="bar-wrap" style="padding:10px 14px">'+plan+'</div>'+
+        onePager(dn)+
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  return '<div class="role-report" style="border:0;padding:0;">'+
+    deepDive +
+    '</div>';
+}
+/* plain-English "what is a domain & how to pick" intro for total beginners */
+function domainIntro(){
+  return '<div class="domain-welcome-box">'+
+    '<div class="beginner"><div class="bg-tag">🔍 NEW HERE? WHAT IS A "DOMAIN"?</div>'+
+    '<p>A <b>domain</b> just means the <b>industry</b> a software product belongs to — like banking, healthcare, shopping or gaming. The <i>code</i> can be similar everywhere, but each industry has its own words, rules and problems.</p>'+
+    '<p class="bg-sub">Why it matters: companies increasingly say "we want someone who understands <b>our business</b>, not just code." Knowing a domain\'s vocabulary makes you useful from day one and is a big interview edge — especially at services firms like TCS, Infosys and Coforge.</p></div>'+
+    '<div class="info-grid4" style="grid-template-columns:1fr 1fr 1fr;margin:0">'+
+      '<div class="info-card what"><div class="ic-label">🤔 HOW DO I PICK ONE?</div><p>Pick the industry of the companies you want to join (e.g. aiming for Coforge/Razorpay → Banking or FinTech). Don\'t spread thin — 1–2 domains, learned well, beat six skimmed.</p></div>'+
+      '<div class="info-card why"><div class="ic-label">⏳ HOW LONG?</div><p>Each domain is a ~4-week crash course: learn the words → understand the workflow → build one small domain-flavoured project.</p></div>'+
+      '<div class="info-card how"><div class="ic-label">🎯 THE GOAL</div><p>Be able to say "I understand how <i>this industry</i> works" and back it with the right terms + one project. That\'s what gets you hired here.</p></div>'+
+    '</div>'+
+    '</div>';
+}
+/* simple ecosystem strip — who/what connects in this domain */
+function ecosystem(dn){
+  var d=DOMAINS[dn], p=DOMAIN_PACK[dn]; if(!d||!p) return '';
+  var nodes=[
+    {i:'👤',t:'Client / User',s:'Triggers action via web or mobile app'},
+    {i:'📱',t:'App Client',s:'Web interface, iOS or Android app'},
+    {i:'⚙️',t:'API Gateway',s:'Routes requests, handles authentication'},
+    {i:'🧠',t:'Core Engine',s:p.usecases[0]||'Core business logic service'},
+    {i:'💾',t:'Database / Ledger',s:'Saves transaction logs and states'},
+    {i:'🛡️',t:'Compliance Router',s:p.compliance[0]||'Auditing and security'}
+  ];
+  return '<h3 class="sub" style="margin-top:14px">⚙️ Technology Data Flow <span class="htip">how systems communicate in this domain</span></h3>'+
+    '<div class="eco">'+nodes.map(function(n){return '<div class="eco-node"><div class="en-ico">'+n.i+'</div><div class="en-ttl">'+ZAP.esc(n.t)+'</div><div class="en-sub">'+ZAP.esc(n.s)+'</div></div>';}).join('')+'</div>';
+}
+function domainPackSections(dn){ return ''; }
+function onePager(dn){
+  var d=DOMAINS[dn], p=DOMAIN_PACK[dn]; if(!d||!p) return '';
+  return '<div class="artifact-box" style="margin-top:16px"><div class="ab-label"> ONE-PAGE SUMMARY</div><div class="ab-title">'+ZAP.esc(dn)+' — at a glance</div>'+
+    '<div class="ab-desc"><b>Is:</b> '+ZAP.esc(d.what)+'<br><b>They expect:</b> '+ZAP.esc(d.expect)+'<br><b>Top terms:</b> '+ZAP.esc(p.terms.slice(0,8).join(', '))+'<br><b>Key rule:</b> '+ZAP.esc(p.compliance[0])+'<br><b>Build:</b> '+ZAP.esc(p.usecases[0])+'</div>'+
+    '<button class="dl-btn" type="button" onclick="(function(){var d=document.getElementById(\'dl-btn\');if(d)d.click();})()"> Download this pack (.txt)</button></div>';
+}
+function glance4(domains, role){
+  if(!domains.length) return '';
+  var first=DOMAINS[domains[0]];
+  var cells=[
+    {l:'DOMAINS SELECTED',v:domains.length,s:domains.join(', ').slice(0,42)},
+    {l:'IMMERSION TIME',v:'4 weeks each',s:'vocabulary → workflow → project'},
+    {l:'YOUR ROLE',v:(role&&role!=='Any role')?role:'not set',s:(role&&role!=='Any role')?'attachment note tailored':'set it in Step 2'},
+    {l:'EXAMPLE FOCUS',v:domains[0],s:first?first.expect.slice(0,40):''}
+  ];
+  var glance='<div class="glance">'+cells.map(function(c){return '<div class="g-cell"><div class="g-lbl">'+c.l+'</div><div class="g-val">'+ZAP.esc(c.v)+'</div><div class="g-sub">'+ZAP.esc(c.s)+'</div></div>';}).join('')+'</div>';
+  var tk=['Don\'t spread thin — <b>pick 1–2 domains</b> and learn their vocabulary well.','Each domain has <b>5–10 words</b> that prove you "get it" — collect them from the cards below.','One <b>domain-flavoured project</b> beats a generic one when applying to that industry.'];
+  window.__TK=tk; return glance;
+}
+var RECS=[
+  {t:"Pick 1–2 target domains and learn their core vocabulary first",b:"You don't need depth in all six. Two domains, learned well, make you credible in interviews there."},
+  {t:"Run the 4-week immersion before applying to a domain's companies",b:"Four focused weeks turn 'I can code' into 'I understand your business' — the differentiator at Tier 2."},
+  {t:"Tie one project to your target domain",b:"A FinTech-flavoured project for a FinTech application proves domain interest, not just skill."}
+];
+
+/* ---- standard boot (identical across agents) ---- */
+(function(){
+  if(AGENT.info) ZAP.mountInfo('info', AGENT.info);
+  var s=AGENT.selector||{type:'roles',multi:true};
+  // chaining: restore role selection carried from a previous role-based agent
+  var restore=[];
+  if(s.type==='roles'){ var saved=ZAP.recall('roles'); if(saved&&saved.length){ restore=saved; ZAP.carryBanner('carryBanner', saved); } }
+  if(s.type==='roles') ZAP.mountRoles('roleGrid', {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel, restore:restore});
+  else ZAP.mountChips('roleGrid', s.items||[], {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel});
+  // prefill resume textarea if one exists and we have remembered resume text
+  var rt=document.getElementById('resumeText'); var savedResume=ZAP.recall('resume');
+  if(rt&&savedResume&&!rt.value) rt.value=savedResume;
+  // copt (Step 2) selection
+  document.addEventListener('click', function(e){
+    var o=e.target.closest && e.target.closest('.copt');
+    if(o){ var g=o.parentNode; g.querySelectorAll('.copt').forEach(function(x){x.classList.remove('active');}); o.classList.add('active'); }
+  });
+  window.optVal=function(id){ var e=document.querySelector('#'+id+' .copt.active'); return e?e.textContent.trim():''; };
+  function run(){
+    var sel=ZAP.selected('roleGrid');
+    if(!sel.length){ alert('Please select at least one '+(AGENT.unit||'role')+' first.'); return; }
+    // chaining: remember role selection + any resume text for the next agent
+    if(s.type==='roles'){ ZAP.remember('roles', sel); ZAP.remember('role', sel[0]); }
+    var rtx=document.getElementById('resumeText'); if(rtx&&rtx.value&&rtx.value.replace(/\s/g,'').length>40) ZAP.remember('resume', rtx.value);
+    ZAP.showReport();
+    AGENT.report(sel);
+    var dl=document.getElementById('dl-btn');
+    if(dl) dl.onclick=function(){ ZAP.download(AGENT.dlname||'zapit_report.txt', AGENT.dltext?AGENT.dltext(sel):JSON.stringify(sel)); };
+  }
+  document.getElementById('run-btn').addEventListener('click', run);
+})();
+</script>
+</body>
+</html>

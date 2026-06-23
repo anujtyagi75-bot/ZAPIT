@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Cheatsheets &amp; Checklists — ZAP IT</title>
+<link rel="stylesheet" href="_shared.css">
+<style>.role-report{border:2px solid var(--border);border-top:4px solid var(--cyan);border-radius:8px;padding:24px;margin:16px 0}.tab-wrap{margin-top:4px}</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="brand">ZAP<em>IT</em></a>
+  <div class="topbar-right"><a href="index.html" class="tbtn">← All Agents</a></div>
+</div>
+<div class="wrap">
+  <div class="agent-hdr">
+    <div class="step-tag">AGENT 11 · CHEATSHEETS</div>
+    <div class="title-row"><div class="agent-ico">&#128203;</div><div><h1>Cheatsheets &amp; Quick Checklists</h1></div></div>
+    <div class="agent-desc">Ready-made, step-by-step checklists you can follow today — Get a Job in 60 Days, ATS Resume Fix, Crack the Interview (0→Offer), Switch to Tech in 90 Days, Double Your Salary, Learn AI + Prompt Engineering, Become a Fullstack Developer, SDLC and more. Pick a few, follow them, download the lot.</div>
+  </div>
+  <div class="agent-info" id="info"></div>
+  <div class="config-panel">
+    <div class="config-panel-title"><span>&#9881;</span> Step 1 — Select Cheatsheet(s) <span class="rolecount" data-rolecount style="margin-left:8px">none selected</span></div>
+    <div class="step-note">Pick one or more cheatsheets, or “All Cheatsheets”. Each is a plain, do-this-then-that checklist.</div>
+    <div id="carryBanner"></div>
+    <div class="role-grid" id="roleGrid"></div>
+    <button class="run-btn" id="run-btn">&#9889; Open Cheatsheets</button>
+    <button type="button" class="dl-btn" style="margin-left:10px;vertical-align:middle" onclick="(function(){var a=document.querySelector('#roleGrid .all-roles');if(a&&!a.classList.contains('sel'))a.click();document.getElementById('run-btn').click();setTimeout(function(){var d=document.getElementById('dl-btn');if(d)d.click();},220);})()"> Download All Cheatsheets (bundle)</button>
+    <div class="run-note">Grab one, or the whole pack. Printable &amp; fully offline.</div>
+  </div>
+  <div class="report-wrap" id="report-wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      <button class="dl-btn" id="dl-btn">&#11015; Download (.txt)</button>
+      <button class="nfbtn" onclick="window.print()">&#128424; Print</button>
+    </div>
+    <div id="reports-container"></div>
+  </div>
+  <div class="nav-footer">
+    <a class="nfbtn" href="index.html">← All Agents</a>
+    <a class="nfbtn primary" href="01_market.html">Next: Market Intelligence &rarr;</a>
+  </div>
+</div>
+<script src="_engine.js"></script>
+<script src="_skills.js"></script>
+<script>
+/* Agent 11 — Cheatsheets & Checklists. Plain step-by-step lists for freshers. */
+var SHEETS={
+"Get a Job in 60 Days":{ico:"•",who:"Anyone job-hunting now",lines:[
+  "Week 1 — Pick ONE target role + 1 domain. Lock your daily study hours.",
+  "Week 1 — Set up GitHub, a clean resume (ATS template) and LinkedIn.",
+  "Week 2–3 — Build & DEPLOY Project 1. Add the live link to your CV.",
+  "Week 3 — Apply to 10 Tier-1 (service) companies. Track in a sheet.",
+  "Week 4–5 — Build & DEPLOY Project 2. Start one free certificate.",
+  "Week 5 — Apply to 15 more companies + ask for 3 referrals on LinkedIn.",
+  "Week 6 — Mock interviews daily; revise your projects out loud.",
+  "Week 7 — Apply to Tier-2 (product) companies with 2 live projects.",
+  "Week 8 — Follow up, negotiate role/CTC, accept. Keep applying till signed."]},
+"ATS Resume Fix":{ico:">",who:"If your resume gets no callbacks",lines:[
+  "Save as PDF named Firstname_Role.pdf.",
+  "Single column. No tables, no photo, no graphics, no fancy fonts.",
+  "Headings exactly: SUMMARY → SKILLS → PROJECTS → EXPERIENCE → EDUCATION.",
+  "Copy the EXACT skill words from the job post (only the true ones).",
+  "Every project: live link + GitHub + the word 'deployed'.",
+  "Every bullet: action verb + what + a number (e.g. 'cut load by 40%').",
+  "Add one AI project — it's now a screening filter.",
+  "One page. Run it through a free ATS checker. Proofread twice."]},
+"Crack the Interview (0→Offer)":{ico:"•",who:"From first call to signed offer",lines:[
+  "Know your resume cold — be ready to defend every single line.",
+  "Prepare a 30-second self-intro; rehearse it out loud.",
+  "Be able to explain EACH project: problem → your decision → result.",
+  "Revise role fundamentals (the 5 'must-have' skills) + 1 behavioural story.",
+  "Solve a few easy/medium DSA problems if it's a product company.",
+  "Think out loud; state assumptions before you code.",
+  "Ask 2 smart questions about the team/product.",
+  "Send a short thank-you note; follow up if no reply in a week."]},
+"Switch to Tech in 90 Days":{ico:"=v",who:"Non-tech background → first tech role",lines:[
+  "Days 0–10 — Pick a beginner-friendly role (Frontend, Data Analyst, QA, BA).",
+  "Days 0–30 — Learn the fundamentals via 1 free course; code daily 1–2 hrs.",
+  "Days 30–45 — Build & deploy Project 1 (small but real).",
+  "Days 45–60 — Add a free certificate + polish GitHub & LinkedIn.",
+  "Days 60–75 — Build Project 2; write 1 'what I learned' post.",
+  "Days 75–90 — Apply to Tier-1 + internships; do mock interviews.",
+  "Lean on your old background — it's a domain advantage, not a weakness."]},
+"Double Your Salary Playbook":{ico:"•",who:"Move from basic band to skilled band",lines:[
+  "Map your role's 'Multiplier' skills (Agent 02) — the ones that move pay.",
+  "Ship 2 deployed projects that use those Multiplier skills.",
+  "Earn the 1 highest-signal cert for your role (project + cert = believable).",
+  "Add one AI/automation project — premium bands expect it.",
+  "Rewrite every resume bullet as impact + a number.",
+  "Target Tier-2 (product) companies — ~2–3→ the salary floor of Tier-1.",
+  "Get a competing offer; negotiate calmly with evidence, not ultimatums.",
+  "Re-skill every 6 months — the market moves; so should you."]},
+"Learn AI + Prompt Engineering":{ico:">",who:"Total beginner to AI",lines:[
+  "Understand the basics: LLM, token, prompt, RAG (answer from your own docs).",
+  "Do a free course: DeepLearning.AI 'ChatGPT Prompt Engineering'.",
+  "Learn the 5 prompt patterns: role, examples, steps, format, constraints.",
+  "Use an AI coding assistant (Copilot / Cursor) in your real projects.",
+  "Build 1 tiny RAG app over your own notes (LangChain / LlamaIndex).",
+  "Add an AI feature to an existing project.",
+  "List the AI tools + the project on your resume and LinkedIn.",
+  "Keep up with basics, not hype — agents, evals, on-device models."]},
+"Become a Fullstack Developer":{ico:"•",who:"Any role → full-stack (works for all)",lines:[
+  "Frontend basics: HTML, CSS, JavaScript — build 3 small pages.",
+  "Learn one framework: React (+ a little TypeScript).",
+  "Backend basics: one language + REST APIs (Node / Python / Java).",
+  "Database basics: SQL + one DB (Postgres). Learn joins & indexes.",
+  "Connect them: build a small app with login + data + a real feature.",
+  "Deploy it (Vercel / Render) and write a clean README.",
+  "Add Git/GitHub habits: commits, branches, pull requests.",
+  "Repeat with a second, slightly bigger app. Pin both on GitHub."]},
+"SDLC — Software Development Life Cycle":{ico:"=",who:"Must-know for every tech interview",lines:[
+  "1. Requirements — gather what to build (BA writes the spec).",
+  "2. Design — plan architecture, data model, UI.",
+  "3. Development — write the code in small pieces.",
+  "4. Testing — QA finds bugs (unit, integration, regression).",
+  "5. Deployment — release to production (DevOps/CI-CD).",
+  "6. Maintenance — fix issues, add features, monitor.",
+  "Models to name: Waterfall (linear) vs Agile/Scrum (iterative sprints).",
+  "Know: sprint, standup, backlog, PR review, CI/CD — interviewers ask."]},
+"Standout GitHub in a Weekend":{ico:"=’",who:"Make recruiters click",lines:[
+  "Set a clear profile name, photo and one-line bio (your role).",
+  "Add a profile README: who you are + pinned projects + skills + contact.",
+  "Pin your best 2–3 DEPLOYED projects.",
+  "Each repo: clear README — problem, what you built, stack, live link, screenshots.",
+  "Clean commit history; delete empty/tutorial-clone repos.",
+  "Add topics/tags so your repos are searchable.",
+  "Put the GitHub link on your resume AND LinkedIn."]},
+"LinkedIn Glow-Up":{ico:"•",who:"Get found by recruiters",lines:[
+  "Headline = Role + top 2 skills + 'open to opportunities'.",
+  "Use the SAME keywords as your resume (recruiters search them).",
+  "About section: 3 lines — who you are, what you've built, what you want.",
+  "Add your deployed projects + GitHub to Featured.",
+  "Turn on 'Open to Work'. Connect with 20 people in your target companies.",
+  "Post 1 short 'what I built / learned' update — it boosts visibility.",
+  "Ask 2 seniors/mentors for a short recommendation."]}
+};
+var AGENT={
+  unit:'cheatsheet', dlname:'zapit_cheatsheets.txt',
+  info:{
+    what:"A library of plain-English checklists and cheatsheets — each one a clear, do-this-then-that list you can follow today, no jargon. Built for a total beginner.",
+    why:"Sometimes you don't need a report — you need a checklist. These turn big goals (get a job, fix your resume, crack interviews) into simple steps you can tick off.",
+    features:["Get a Job in 60 Days → Switch to Tech in 90 Days","ATS Resume Fix → Crack the Interview (0→Offer)","Double Your Salary → Learn AI + Prompt Engineering","Become a Fullstack Developer (works for all roles) → SDLC","Standout GitHub → LinkedIn Glow-Up","Pick one, follow it, or download the whole pack"],
+    examples:["'Get a Job in 60 Days' — a week-by-week plan","'ATS Resume Fix' — 8 fixes that beat the resume robots","'SDLC' — the 6 stages every interview asks about"]
+  },
+  selector:{type:'chips', items:Object.keys(SHEETS).map(function(k){return {n:k,ico:SHEETS[k].ico};}), multi:true, allLabel:'All Cheatsheets'},
+  report:function(sheets){
+    var c=document.getElementById('reports-container');
+    var html='<div class="step-note">Quick checklist(s) for '+sheets.map(function(r){return ZAP.esc(r);}).join(', ')+' &nbsp; '+ZAP.indic('Indicative — adapt to your situation')+'</div>';
+    
+    html+='<div class="report-panel" id="rpanel-role">';
+    if(sheets.length===1){
+      html+=renderSheet(sheets[0]);
+    } else {
+      html+='<div class="report-sub-tabs">';
+      sheets.forEach(function(sn,i){
+        html+='<button class="rsub'+(i===0?' active':'')+'" onclick="switchRoleTab('+i+')">'+ZAP.esc(sn)+'</button>';
+      });
+      html+='</div>';
+      sheets.forEach(function(sn,i){
+        html+='<div class="role-panel'+(i===0?' active':'')+'" id="rp-'+i+'">';
+        html+=renderSheet(sn);
+        html+='</div>';
+      });
+    }
+    html+='</div>';
+    
+    html+=ZAP.closeout(RECS, {href:'01_market.html',label:'Agent 01 · Market Intelligence',desc:'Want the full picture behind these steps? Start the journey from Agent 01.'}, [
+      'Pick <b>one cheatsheet</b> and actually finish it before starting the next.',
+      'Most of these come back to the same move: <b>build, deploy, and show a live link</b>.',
+      'Print or download your chosen list and <b>tick items off daily</b>.']);
+    c.innerHTML=html;
+  },
+  dltext:function(sheets){
+    var t='ZAP IT — CHEATSHEETS & CHECKLISTS\n'+'='.repeat(48)+'\n\n';
+    sheets.forEach(function(sn){ var d=SHEETS[sn]; if(!d) return;
+      t+=sn.toUpperCase()+'\n('+d.who+')\n'+'-'.repeat(40)+'\n';
+      d.lines.forEach(function(l,i){ t+=' ['+(i+1)+'] '+l+'\n'; });
+      t+='\n';
+    });
+    return t;
+  }
+};
+function renderSheet(sn){
+  var d=SHEETS[sn]; if(!d) return '';
+
+  var verdict = '<div class="verdict-col">' +
+    '<div class="verdict-hero vh-green">' +
+      '<div class="vh-lbl">CHEATSHEET BUNDLE</div>' +
+      '<div class="vh-val">' + ZAP.esc(sn) + '</div>' +
+      '<div class="vh-sub">For: ' + ZAP.esc(d.who) + '</div>' +
+    '</div>' +
+  '</div>';
+  
+  var kpis = ZAP.kpiRow([
+    {lbl:'TOTAL STEPS', val:d.lines.length+' Steps', sub:'ordered process', cls:'demand'},
+    {lbl:'TARGET LEVEL', val:'Beginner', sub:'jargon-free lists', cls:'pos'},
+    {lbl:'OUTCOME', val:'Actionable', sub:'step-by-step', cls:'trend'},
+    {lbl:'TYPE', val:'Checklist', sub:'ready to download', cls:'violet'}
+  ]);
+  
+  var outcome = '<div class="sample-resume" style="margin:0"><h5>WHO IT IS FOR</h5>"This cheatsheet is curated specifically for: ' + ZAP.esc(d.who) + '. Follow each step sequentially."</div>';
+  var bento = '<div class="bento-snapshot">' + verdict + '<div class="data-col">' + kpis + outcome + '</div></div>';
+
+  var id = sn.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
+  
+  var listHtml = ZAP.cheatCard(sn, d.lines.map(function(l){return ZAP.esc(l);}),
+      '<button class="dl-btn" type="button" style="margin-top:10px" onclick="(function(){var x=document.getElementById(\'dl-btn\');if(x)x.click();})()"> Download all checklists (.txt)</button>');
+      
+  var takeawaysHtml = '<div class="success-box" style="margin-top:0">' +
+    '<p><b>Key Takeaway:</b> Pick this checklist and execute it daily. Focus on progress, not perfection.</p>' +
+    '<p style="margin-top:8px">Every item you cross off brings you closer to your career milestone.</p>' +
+    '</div>';
+
+  var deepDive = '<div class="deep-dive">' +
+    '<aside class="sidebar-nav">' +
+      '<button class="s-tab active" onclick="switchSTab(this, \''+id+'-list\')">📋 Step-by-Step Checklist</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-takeaways\')">💡 Actionable Takeaways</button>' +
+    '</aside>' +
+    '<div class="sidebar-content">' +
+      '<div class="s-panel active" id="'+id+'-list">' +
+        listHtml +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-takeaways">' +
+        '<h4 class="micro" style="margin-top:0">ACTIONABLE ADVICE</h4>' +
+        takeawaysHtml +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  return '<div class="role-report" style="border:0;padding:0;">'+
+    '<div style="display:flex;align-items:center;gap:12px;margin:0 0 6px"><span style="font-size:26px">'+d.ico+'</span><h2 class="sec" style="margin:0;border:0">'+ZAP.esc(sn)+'</h2></div>'+
+    bento +
+    deepDive +
+    '</div>';
+}
+window.switchRoleTab=function(idx){
+  document.querySelectorAll('.role-panel').forEach(function(p,i){ p.classList.toggle('active',i===idx); });
+  document.querySelectorAll('.rsub').forEach(function(b,i){ b.classList.toggle('active',i===idx); });
+};
+window.switchSTab=function(btn,id){
+  var nav=btn.parentNode;
+  var content=nav.nextElementSibling;
+  nav.querySelectorAll('.s-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  content.querySelectorAll('.s-panel').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById(id); if(t) t.classList.add('active');
+};
+var RECS=[
+  {t:"Finish one cheatsheet before starting the next",b:"These work because they're simple. Pick the one that matches your biggest blocker right now and complete it end to end."},
+  {t:"Everything points back to one move: build, deploy, show",b:"A live link on your CV fixes more rejections than any certificate. Make that your default for every project."},
+  {t:"Print or download and tick items off",b:"A checklist only helps if you use it. Keep your chosen list open and check items off as you go."}
+];
+
+/* ---- standard boot (identical across agents) ---- */
+(function(){
+  if(AGENT.info) ZAP.mountInfo('info', AGENT.info);
+  var s=AGENT.selector||{type:'roles',multi:true};
+  var restore=[];
+  if(s.type==='roles'){ var saved=ZAP.recall('roles'); if(saved&&saved.length){ restore=saved; ZAP.carryBanner('carryBanner', saved); } }
+  if(s.type==='roles') ZAP.mountRoles('roleGrid', {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel, restore:restore});
+  else ZAP.mountChips('roleGrid', s.items||[], {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel});
+  var rt=document.getElementById('resumeText'); var savedResume=ZAP.recall('resume');
+  if(rt&&savedResume&&!rt.value) rt.value=savedResume;
+  document.addEventListener('click', function(e){
+    var o=e.target.closest && e.target.closest('.copt');
+    if(o){ var g=o.parentNode; g.querySelectorAll('.copt').forEach(function(x){x.classList.remove('active');}); o.classList.add('active'); }
+  });
+  window.optVal=function(id){ var e=document.querySelector('#'+id+' .copt.active'); return e?e.textContent.trim():''; };
+  function run(){
+    var sel=ZAP.selected('roleGrid');
+    if(!sel.length){ alert('Please select at least one '+(AGENT.unit||'cheatsheet')+' first.'); return; }
+    ZAP.showReport();
+    AGENT.report(sel);
+    var dl=document.getElementById('dl-btn');
+    if(dl) dl.onclick=function(){ ZAP.download(AGENT.dlname||'zapit_report.txt', AGENT.dltext?AGENT.dltext(sel):JSON.stringify(sel)); };
+  }
+  document.getElementById('run-btn').addEventListener('click', run);
+})();
+</script>
+</body>
+</html>

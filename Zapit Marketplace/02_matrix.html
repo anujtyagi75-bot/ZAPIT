@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Role Skill Matrix — ZAP IT</title>
+<link rel="stylesheet" href="_shared.css">
+<style>.role-report{border:2px solid var(--border);border-top:4px solid var(--cyan);border-radius:8px;padding:24px;margin:16px 0}.tab-wrap{margin-top:4px}</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="brand">ZAP<em>IT</em></a>
+  <div class="topbar-right"><a href="index.html" class="tbtn">← All Agents</a></div>
+</div>
+<div class="wrap">
+  <div class="agent-hdr">
+    <div class="step-tag">AGENT 02 · SKILL MAP</div>
+    <div class="title-row"><div class="agent-ico">&#128506;&#65039;</div><div><h1>Role Skill Matrix</h1></div></div>
+    <div class="agent-desc">The full path per role: core &amp; foundational skills (must-have vs good-to-have), the tools you'll actually use, and recommended training/certs — each rated by hiring signal. Compare roles, spot cert ROI and skills that transfer.</div>
+  </div>
+  <div class="agent-info" id="info"></div>
+  <div class="config-panel">
+    <div class="config-panel-title"><span>&#9881;</span> Step 1 — Select Role(s) <span class="rolecount" data-rolecount style="margin-left:8px">none selected</span></div>
+    <div class="step-note">Pick one or more roles, or “All Roles”, to see the full rated matrix.</div>
+    <div id="carryBanner"></div>
+    <div class="role-grid" id="roleGrid"></div>
+    
+    <button class="run-btn" id="run-btn">&#9889; Generate Skill Matrix</button>
+    <div class="run-note">Runs fully offline — no API key, no internet.</div>
+  </div>
+  <div class="report-wrap" id="report-wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      <button class="dl-btn" id="dl-btn">&#11015; Download (.txt)</button>
+      <button class="nfbtn" onclick="window.print()">&#128424; Print</button>
+    </div>
+    <div id="reports-container"></div>
+  </div>
+  <div class="nav-footer">
+    <a class="nfbtn" href="index.html">← All Agents</a>
+    <a class="nfbtn primary" href="03_roadmap.html">Next: Career Roadmaps &rarr;</a>
+  </div>
+</div>
+<script src="_engine.js"></script>
+<script src="_skills.js"></script>
+<script>
+var AGENT = {
+  unit:'role', dlname:'zapit_skill_matrix.txt',
+  info:{
+    what:"A pure skill-intelligence matrix for each role: the exact primary & secondary skills, tools, technologies, certifications and trainings — each rated by how strongly it moves hiring.",
+    why:"Students waste months learning the wrong things in the wrong order. This tells you what to learn, what it's worth, and what to do first — nothing else, no fluff.",
+    features:["Core/technical + foundational/soft skills, with must-have vs good-to-have & proficiency tags","Tools & technologies with category tags (IDE, Framework, DB, CI/CD, Collaboration)","Certifications & trainings with a 'do this first' rating + provider","Cert ROI advisor — which certs actually move hiring","Role comparison, skill transferability map & easiest-entry recommender","Budget-first path — free trainings before paid certs"],
+    examples:["Frontend: React+Hooks rates 5/5; jQuery is a 'stop' skill","Cloud Eng: AWS SA-Associate is the single highest-signal cert (5/5)","ML/AI: 'Ship 1 production RAG app' is the #1 training to do first"]
+  },
+  selector:{type:'roles',multi:true},
+  report:function(roles){
+    var c=document.getElementById('reports-container');
+    var html='<div class="step-note">Ratings = hiring signal (1–5). '+ZAP.indic('Indicative — verify current certs before paying')+'</div>';
+    html+=ZAP.guideBox(true);
+    
+    html+='<div class="report-panel" id="rpanel-role">';
+    if(roles.length===1){
+      html+=renderMatrix(roles[0]);
+    } else {
+      html+='<div class="report-sub-tabs">';
+      roles.forEach(function(rn,i){
+        html+='<button class="rsub'+(i===0?' active':'')+'" onclick="switchRoleTab('+i+')">'+ZAP.esc(rn)+'</button>';
+      });
+      html+='</div>';
+      roles.forEach(function(rn,i){
+        html+='<div class="role-panel'+(i===0?' active':'')+'" id="rp-'+i+'">';
+        html+=renderMatrix(rn);
+        html+='</div>';
+      });
+    }
+    html+='</div>';
+    
+    var rn=roles[0]; var s=ZAP.SKILLS[rn];
+    var doFirst = s && s.trainings.slice().sort(function(a,b){return b.r-a.r;})[0];
+    var tk = [
+      'Start with the <b>5★ green primary skills</b> — they clear the JD filter fastest.',
+      'Do the <b>green do-first training</b> ('+ZAP.esc(doFirst?doFirst.n:'')+') before anything flashy.',
+      'Pair the top cert with a project so it reads as <b>evidence, not a keyword</b>.'
+    ];
+    
+    html+=decisionSupport(roles);
+    html+=ZAP.closeout(leadRec2(roles).concat(RECS), {href:'03_roadmap.html',label:'Agent 03 · Career Roadmaps',desc:'You know WHAT to learn. Get the WHEN & HOW — a 30/60/90 plan with projects and weekly hours. Your role carries over.'}, tk);
+    c.innerHTML=html;
+  },
+  dltext:function(roles){
+    var t='ZAP IT — Role Skill Matrix\n'+'='.repeat(46)+'\n\n';
+    roles.forEach(function(rn){ var s=ZAP.SKILLS[rn]; if(!s) return;
+      t+=rn+'\n'+'-'.repeat(38)+'\n';
+      ['primary','secondary','tools','tech','certs','trainings'].forEach(function(k){
+        t+=k.toUpperCase()+':\n'; s[k].forEach(function(x){ t+='  ['+x.r+'/5] '+x.n+(x.note?(' — '+x.note):'')+'\n'; }); t+='\n';
+      });
+    });
+    return t;
+  }
+};
+window.switchRoleTab=function(idx){
+  document.querySelectorAll('.role-panel').forEach(function(p,i){ p.classList.toggle('active',i===idx); });
+  document.querySelectorAll('.rsub').forEach(function(b,i){ b.classList.toggle('active',i===idx); });
+};
+window.switchSTab=function(btn,id){
+  var nav=btn.parentNode;
+  var content=nav.nextElementSibling;
+  nav.querySelectorAll('.s-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  content.querySelectorAll('.s-panel').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById(id); if(t) t.classList.add('active');
+};
+function priTag(r){ return r>=4?'<span class="tag tg">Must-have</span>':'<span class="tag ta">Good-to-have</span>'; }
+function profTag(r){ var p=r>=5?'Proficient':r>=3?'Working':'Awareness'; return '<span class="tag tc">'+p+'</span>'; }
+function catOf(n){ n=(n||'').toLowerCase();
+  if(/git|jira|slack|confluence|notion|postman/.test(n)) return /postman/.test(n)?'API':'Collaboration';
+  if(/docker|kubernetes|k8s|jenkins|actions|terraform|ci\/cd|helm|argo/.test(n)) return 'CI/CD + Infra';
+  if(/sql|postgres|mysql|mongo|redis|snowflake|bigquery|dynamo|warehouse/.test(n)) return 'Database';
+  if(/vs code|intellij|pycharm|eclipse|xcode|android studio|jupyter|notebook/.test(n)) return 'IDE';
+  if(/react|spring|django|flask|node|express|next|angular|vue|pandas|tensorflow|pytorch|\.js|fastapi|spark|airflow|dbt/.test(n)) return 'Framework / Lib';
+  return 'Tool';
+}
+function skillRows(arr,cls,opts){
+  opts=opts||{};
+  return arr.map(function(x){
+    return ZAP.skillLine(x, {cat: opts.cat?catOf(x.n):'', prof: opts.tags!==false});
+  }).join('');
+}
+function renderMatrix(rn){
+  var s=ZAP.SKILLS[rn]; var m=ZAP.MARKET[rn];
+  if(!s) return '';
+  var desc=m?m.desc:''; var ex=m?m.examples:'';
+  var vcls = (m && m.trend && /UP|HOT/i.test(m.trend)) ? 'vh-green' : 'vh-cyan';
+  var verdict = '<div class="verdict-col">' +
+    '<div class="verdict-hero ' + vcls + '">' +
+      '<div class="vh-lbl">SKILL MATRIX</div>' +
+      '<div class="vh-val">' + ZAP.esc(rn) + '</div>' +
+      '<div class="vh-sub">' + ZAP.esc(desc ? desc.split('.')[0] + '.' : 'Target skills mapping.') + '</div>' +
+    '</div>' +
+  '</div>';
+  var first3 = s.primary.slice(0,3).map(function(x){return x.n;});
+  var topCert = s.certs.slice().sort(function(a,b){return b.r-a.r;})[0];
+  var kpis = ZAP.kpiRow([
+    {lbl:'LEARN FIRST', val:s.primary.length + ' Skills', sub:first3.slice(0, 2).join(' → '), cls:'demand'},
+    {lbl:'TOP CERT', val:topCert?topCert.n.slice(0,18):'None', sub:topCert?(topCert.r+'/5 signal'):'No cert rated', cls:'pos'},
+    {lbl:'TOOLS & TECH', val:(s.tools.length + s.tech.length) + ' Items', sub:'ecosystem tools', cls:'trend'},
+    {lbl:'TRAININGS', val:s.trainings.length + ' Rated', sub:'ROI focus', cls:'violet'}
+  ]);
+  var bento = '<div class="bento-snapshot">' + verdict + '<div class="data-col">' + kpis + ZAP.beginnerBox(rn) + '</div></div>';
+  
+  var id = rn.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
+  var deepDive = '<div class="deep-dive">' +
+    '<aside class="sidebar-nav">' +
+      '<button class="s-tab active" onclick="switchSTab(this, \''+id+'-primary\')">📈 Core Technical</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-secondary\')">🛠️ Supporting Skills</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-tools\')">🖥️ Tools &amp; Tech</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-certs\')">📜 Certifications</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-trainings\')">🎯 Trainings</button>' +
+    '</aside>' +
+    '<div class="sidebar-content">' +
+      '<div class="s-panel active" id="'+id+'-primary">' +
+        '<h3 class="sub" style="margin-top:0">Core / Technical Skills <span class="htip">languages &amp; fundamentals — learn these first</span></h3>' +
+        '<p style="font-size:11px;color:var(--slate-light);margin:2px 0 6px">Tags: priority (Must-have / Good-to-have) → proficiency needed (Awareness → Working → Proficient)</p>' +
+        '<div class="bar-wrap" style="padding:4px 0">' + skillRows(s.primary,'must',{tags:true}) + '</div>' +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-secondary">' +
+        '<h3 class="sub" style="margin-top:0">Foundational / Supporting Skills <span class="htip">soft skills, version control, differentiators for Tier 2+</span></h3>' +
+        '<div class="bar-wrap" style="padding:4px 0">' + skillRows(s.secondary,'imp',{tags:true}) + '</div>' +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-tools">' +
+        '<h3 class="sub" style="margin-top:0">Tools &amp; Technologies <span class="htip">with category tags</span></h3>' +
+        '<div class="config-grid"><div><h4 class="micro">TOOLS (primary + ecosystem)</h4><div class="bar-wrap" style="padding:4px 0">' + skillRows(s.tools,'good',{cat:true}) + '</div></div>' +
+        '<div><h4 class="micro">TECHNOLOGIES / FRAMEWORKS</h4><div class="bar-wrap" style="padding:4px 0">' + skillRows(s.tech,'good',{cat:true}) + '</div></div></div>' +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-certs">' +
+        '<h3 class="sub" style="margin-top:0">Certifications <span class="htip">resume keywords + proof</span></h3>' +
+        '<div class="bar-wrap" style="padding:4px 0">' + skillRows(s.certs,'learn') + '</div>' +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-trainings">' +
+        '<h3 class="sub" style="margin-top:0">Trainings <span class="htip">the green ones are highest ROI — do first</span></h3>' +
+        '<div class="bar-wrap" style="padding:4px 0">' + skillRows(s.trainings,'learn') + '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  return '<div class="role-report" style="border:0;padding:0;">'+
+    '<h2 class="sec" style="margin:16px 0 10px">'+ZAP.esc(rn)+'</h2>'+
+    bento +
+    deepDive +
+    '</div>';
+}
+function ratioN(r){ var m=(r||'').match(/(\d+)/); return m?+m[1]:999; }
+function decisionSupport(roles){
+  var rows=roles.map(function(rn){return {rn:rn,s:ZAP.SKILLS[rn],m:ZAP.MARKET[rn]};}).filter(function(x){return x.s;});
+  if(!rows.length) return '';
+  var H='<h2 class="sec" style="margin-top:0; border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:16px">Decision Support <span class="sec-tip">cert ROI → role compare → transferable skills → easiest entry</span></h2>';
+  /* Cert ROI advisor */
+  var certRows=[];
+  rows.forEach(function(x){ (x.s.certs||[]).forEach(function(cz){
+    var verdict=cz.r>=4?'<span class="tag tg">Influences hiring –</span>':cz.r===3?'<span class="tag ta">Helps as keyword</span>':'<span class="tag trd">Optional</span>';
+    certRows.push(['<b>'+ZAP.linkName(cz.n)+'</b>',ZAP.esc(x.rn),ZAP.stars(cz.r),verdict]);
+  }); });
+  H+='<h3 class="sub">Cert ROI Advisor <span class="htip">which certs actually move fresher hiring</span></h3>'+ZAP.table(['CERTIFICATION','ROLE','SIGNAL','VERDICT'],certRows);
+  /* Role comparison (>=2) */
+  if(rows.length>=2){
+    var cmp=rows.map(function(x){
+      var topP=x.s.primary.slice(0,2).map(function(y){return y.n;}).join(', ');
+      var topC=(x.s.certs||[]).slice().sort(function(a,b){return b.r-a.r;})[0];
+      return ['<b>'+ZAP.esc(x.rn)+'</b>',ZAP.esc(topP),topC?ZAP.esc(topC.n):'—',x.m?ZAP.esc(x.m.demand):'—',x.m?ZAP.esc(x.m.bands.basic.amt):'—',x.m?ZAP.esc(x.m.ratio):'—'];
+    });
+    H+='<h3 class="sub" style="margin-top:16px">Role Comparison <span class="htip">side by side</span></h3>'+ZAP.table(['ROLE','TOP SKILLS','TOP CERT','DEMAND','FRESHER BAND','COMPETITION'],cmp);
+    /* Skill transferability */
+    var count={};
+    rows.forEach(function(x){ x.s.primary.concat(x.s.secondary).forEach(function(y){ count[y.n]=(count[y.n]||0)+1; }); });
+    var shared=Object.keys(count).filter(function(k){return count[k]>=2;}).sort(function(a,b){return count[b]-count[a];});
+    H+='<h3 class="sub" style="margin-top:16px">Skill Transferability Map <span class="htip">best learning ROI — carries across roles</span></h3>'+
+       (shared.length?'<p>'+shared.map(function(k){return '<span class="tag tg" style="margin:2px">'+ZAP.esc(k)+' → '+count[k]+' roles</span>';}).join(' ')+'</p>':'<p style="font-size:13px;color:var(--slate-light)">No overlap among the selected roles — these are fairly distinct tracks.</p>');
+    /* Easiest entry */
+    var easiest=rows.slice().filter(function(x){return x.m;}).sort(function(a,b){return ratioN(a.m.ratio)-ratioN(b.m.ratio);})[0];
+    if(easiest) H+='<div class="success-box" style="margin-top:14px"><div class="lbl">EASIEST ENTRY</div><p>'+ZAP.esc(easiest.rn)+' has the shortest path to a job among your picks — loosest competition ('+ZAP.esc(easiest.m.ratio)+'). Start here for the fastest realistic offer.</p></div>';
+  }
+  /* Budget filter note */
+  H+='<div class="wow" style="margin-top:14px"><div class="lbl">BUDGET-FIRST PATH</div><p>Free-first: do the green trainings (project-based, free) before paying for any cert. Only buy a cert tagged "Influences hiring" above — the rest are optional keywords.</p></div>';
+  return '<div class="decision-support-card" style="border:2px solid var(--border); border-top:4px solid var(--violet); border-radius:8px; padding:24px; margin:24px 0; background:var(--bg-base)">' + H + '</div>';
+}
+
+function leadRec2(roles){
+  var s=ZAP.SKILLS[roles[0]]; if(!s) return [];
+  var p=s.primary.slice(0,3).map(function(x){return x.n;}).join(' → ');
+  return [{t:'Your exact learning order for '+roles[0]+': '+p,b:'Follow the rating, top-down. Finish these three primaries before touching secondary skills or certs — every hour then clears more of the JD filter.'}];
+}
+var RECS=[
+  {t:"Learn strictly in rating order: 5★ green primary → tools → secondary → certs",b:"The rating is the hiring signal. Following it guarantees every hour clears more of the JD filter than the last."},
+  {t:"Pair every certification with one project that uses it",b:"Cert + project = believable. Do the 'green do-first' training next to each cert so it becomes evidence, not a claim."},
+  {t:"Move skill execution into a dated plan",b:"A matrix tells you what; a roadmap tells you when. Take this list into Agent 03 and bind it to 30/60/90-day milestones."}
+];
+
+/* ---- standard boot (identical across agents) ---- */
+(function(){
+  if(AGENT.info) ZAP.mountInfo('info', AGENT.info);
+  var s=AGENT.selector||{type:'roles',multi:true};
+  // chaining: restore role selection carried from a previous role-based agent
+  var restore=[];
+  if(s.type==='roles'){ var saved=ZAP.recall('roles'); if(saved&&saved.length){ restore=saved; ZAP.carryBanner('carryBanner', saved); } }
+  if(s.type==='roles') ZAP.mountRoles('roleGrid', {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel, restore:restore});
+  else ZAP.mountChips('roleGrid', s.items||[], {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel});
+  // prefill resume textarea if one exists and we have remembered resume text
+  var rt=document.getElementById('resumeText'); var savedResume=ZAP.recall('resume');
+  if(rt&&savedResume&&!rt.value) rt.value=savedResume;
+  // copt (Step 2) selection
+  document.addEventListener('click', function(e){
+    var o=e.target.closest && e.target.closest('.copt');
+    if(o){ var g=o.parentNode; g.querySelectorAll('.copt').forEach(function(x){x.classList.remove('active');}); o.classList.add('active'); }
+  });
+  window.optVal=function(id){ var e=document.querySelector('#'+id+' .copt.active'); return e?e.textContent.trim():''; };
+  function run(){
+    var sel=ZAP.selected('roleGrid');
+    if(!sel.length){ alert('Please select at least one '+(AGENT.unit||'role')+' first.'); return; }
+    // chaining: remember role selection + any resume text for the next agent
+    if(s.type==='roles'){ ZAP.remember('roles', sel); ZAP.remember('role', sel[0]); }
+    var rtx=document.getElementById('resumeText'); if(rtx&&rtx.value&&rtx.value.replace(/\s/g,'').length>40) ZAP.remember('resume', rtx.value);
+    ZAP.showReport();
+    AGENT.report(sel);
+    var dl=document.getElementById('dl-btn');
+    if(dl) dl.onclick=function(){ ZAP.download(AGENT.dlname||'zapit_report.txt', AGENT.dltext?AGENT.dltext(sel):JSON.stringify(sel)); };
+  }
+  document.getElementById('run-btn').addEventListener('click', run);
+})();
+</script>
+</body>
+</html>

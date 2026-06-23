@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Resume Download Kits — ZAP IT</title>
+<link rel="stylesheet" href="_shared.css">
+<style>.role-report{border:2px solid var(--border);border-top:4px solid var(--cyan);border-radius:8px;padding:24px;margin:16px 0}.tab-wrap{margin-top:4px}</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="brand">ZAP<em>IT</em></a>
+  <div class="topbar-right"><a href="index.html" class="tbtn">← All Agents</a></div>
+</div>
+<div class="wrap">
+  <div class="agent-hdr">
+    <div class="step-tag">AGENT 05 · RESUME KIT</div>
+    <div class="title-row"><div class="agent-ico">&#128196;</div><div><h1>Resume Download Kits</h1></div></div>
+    <div class="agent-desc">A ready-to-use resume kit per role: learn what matters (GitHub → ATS → LinkedIn), copy an ideal filled-in sample, grab the ATS template + GitHub README + LinkedIn headlines, and use the checklist & cheatsheet. Optional: paste your resume for a quick score.</div>
+  </div>
+  <div class="agent-info" id="info"></div>
+  <div class="config-panel">
+    <div class="config-panel-title"><span>&#9881;</span> Step 1 — Select Role(s) <span class="rolecount" data-rolecount style="margin-left:8px">none selected</span></div>
+    <div class="step-note">Pick your target role, then paste your resume in Step 2 for live scoring (optional).</div>
+    <div id="carryBanner"></div>
+    <div class="role-grid" id="roleGrid"></div>
+    <div class="cgrp" style="margin-top:16px"><label>Target tier (context)</label><div class="copts" id="g_tier"><div class="copt active">Any</div><div class="copt">Tier 1 (service)</div><div class="copt">Tier 2 (product)</div><div class="copt">Tier 3 (FAANG)</div></div></div>
+<div class="cgrp" style="margin-top:14px"><label>Paste your resume text (optional — enables live scoring)</label><textarea id="resumeText" class="zta" placeholder="Paste your resume here as plain text..."></textarea></div>
+    <button class="run-btn" id="run-btn">&#9889; Analyze My Resume</button>
+    <div class="run-note">Runs fully offline — no API key, no internet.</div>
+  </div>
+  <div class="report-wrap" id="report-wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      <button class="dl-btn" id="dl-btn">&#11015; Download (.txt)</button>
+      <button class="nfbtn" onclick="window.print()">&#128424; Print</button>
+    </div>
+    <div id="reports-container"></div>
+  </div>
+  <div class="nav-footer">
+    <a class="nfbtn" href="index.html">← All Agents</a>
+    <a class="nfbtn primary" href="06_aireadiness.html">Next: AI Readiness &rarr;</a>
+  </div>
+</div>
+<script src="_engine.js"></script>
+<script src="_skills.js"></script>
+<script>
+/* Agent 5 — Resume Intelligence Analyzer. Offline keyword analysis. */
+var AI_WORDS=["ai","ml","machine learning","chatgpt","gpt","copilot","llm","rag","prompt","langchain","hugging face","openai","gemini","vector","embedding","generative","automation","pandas","tensorflow","pytorch"];
+var ACTION_VERBS=["built","shipped","deployed","designed","led","improved","reduced","increased","automated","launched","created","optimized","developed","implemented","delivered","owned","scaled"];
+var DOMAIN_WORDS=["fintech","payments","upi","healthcare","saas","b2b","e-commerce","marketplace","logistics","edtech","compliance","reconciliation","funnel","retention","churn","roas"];
+function has(t,w){return t.indexOf(w)>-1;}
+function pct(a,b){return b?Math.round(a/b*100):0;}
+var AGENT={
+  unit:'role', dlname:'zapit_resume_kit.txt',
+  info:{
+    what:"A complete resume kit per role: it scores your resume on 6 parameters, lists the keywords you're missing, flags domain-language and AI gaps — then hands you a fillable profile pack (ATS CV template, GitHub README, LinkedIn headlines, before/after bullet rewrites) to download.",
+    why:"~75% of resumes are filtered before a human reads them. This shows exactly why — and gives you the templates to fix it in one sitting, for your role.",
+    features:["6-parameter score: ATS structure, role keywords, project evidence, domain language, AI fluency, impact/metrics","Missing role keywords listed explicitly + AI-gap report","Profile pack: ATS-safe CV template (fillable)","GitHub README layout + 3 LinkedIn headline formulas","Before → after bullet rewrites you can copy","Paste your resume for live scoring, or use the kit as a checklist"],
+    examples:["Frontend resume missing 'TypeScript, deployed, Lighthouse' → flagged","'Made a website' → 'Built & deployed a React app used by 200+ users'","No AI tools anywhere → AI-gap report tells you what to add"]
+  },
+  selector:{type:'roles',multi:true,allLabel:'All Roles'},
+  report:function(roles){
+    var el=document.getElementById('resumeText');
+    var txt=((el&&el.value)||'').toLowerCase();
+    var c=document.getElementById('reports-container');
+    var mode=txt.replace(/\s/g,'').length>40?'scored':'framework';
+    var html='<div class="step-note">'+(mode==='scored'?'Analyzed your pasted resume':'Download-kit mode — grab the templates below, or paste your resume in Step 2 for an optional live score')+' &nbsp; '+ZAP.indic('Offline resume kit')+'</div>';
+    
+    html+='<div class="report-panel" id="rpanel-role">';
+    if(roles.length===1){
+      html+=renderResumeKit(roles[0], txt, mode);
+    } else {
+      html+='<div class="report-sub-tabs">';
+      roles.forEach(function(rn,i){
+        html+='<button class="rsub'+(i===0?' active':'')+'" onclick="switchRoleTab('+i+')">'+ZAP.esc(rn)+'</button>';
+      });
+      html+='</div>';
+      roles.forEach(function(rn,i){
+        html+='<div class="role-panel'+(i===0?' active':'')+'" id="rp-'+i+'">';
+        html+=renderResumeKit(rn, txt, mode);
+        html+='</div>';
+      });
+    }
+    html+='</div>';
+    
+    html+=ZAP.closeout((mode==='scored'?leadRec5(roles[0],txt):[]).concat(RECS), {href:'06_aireadiness.html',label:'Agent 06 · AI Readiness',desc:'Resume kit ready? Check your AI-readiness signal next — your role carries over.'}, window.__TK||DEFAULT_TK);
+    c.innerHTML=html;
+  },
+  dltext:function(roles){
+    var rn=roles[0]; var s=ZAP.SKILLS[rn]||{primary:[],secondary:[]};
+    var top=(s.primary||[]).slice(0,3).map(function(x){return x.n;});
+    var skills=(s.primary||[]).concat(s.secondary||[]).slice(0,8).map(function(x){return x.n;}).join(' → ');
+    var L='='.repeat(48);
+    var t='ZAP IT — RESUME DOWNLOAD KIT\n'+L+'\nRole: '+rn+'\n\n';
+    t+='[ 6-PARAMETER RUBRIC ]\n'+L+'\n1. ATS structure — EXPERIENCE / EDUCATION / SKILLS / PROJECTS, single column\n2. Role keywords — '+(top.join(', ')||'core skills')+' present\n3. Project evidence — live links + GitHub + the word "deployed"\n4. Domain language — your target industry vocabulary\n5. AI fluency — at least one AI tool/project listed\n6. Impact / metrics — action verb + a number on every bullet\n\n';
+    t+='[ ATS CV TEMPLATE ]\n'+L+'\n[YOUR NAME]\n'+rn+' → [City] → [email] → [GitHub] → [LinkedIn]\n\nSUMMARY\n'+rn+' focused on '+(top.join(', ')||'[core skills]')+'. Built and deployed [N] projects. Looking for [target].\n\nSKILLS\n'+skills+'\n\nPROJECTS\n- [Project] — built with '+(top[0]||'[stack]')+'. [Result/metric]. [Live URL] → [GitHub]\n- [Project 2] — [what] using [stack]. [Result].\n\nEXPERIENCE / INTERNSHIPS\n- [Role] @ [Org] — [what you did] -> [measurable result].\n\nEDUCATION\n[Degree], [College], [Year] → [CGPA if strong]\n\n';
+    t+='[ GITHUB README ]\n'+L+'\n### Hi, I\'m [Name]\n'+rn+' → '+(top.join(' / ')||'[skills]')+'\n\nPinned Projects\n- [Project] — '+(top[0]||'[skill]')+' → [live link] → [repo]\n- [Project 2] — [stack] → [live link]\nSkills: '+(top.join(', ')||'[skills]')+'\nReach me: [email] → [LinkedIn]\n\n';
+    t+='[ LINKEDIN HEADLINES — pick one ]\n'+L+'\n- '+rn+' → '+(top.slice(0,2).join('/')||'[skills]')+' → [N] deployed projects\n- Aspiring '+rn+' | Building with '+(top[0]||'[skill]')+' | Open to opportunities\n- '+rn+' | '+(top.join(', ')||'[skills]')+' | [College] \'[YY]\n\n';
+    t+='[ BULLET REWRITES: before -> after ]\n'+L+'\n- Made a website -> Built & deployed a '+(top[0]||'web')+' app used by 200+ users\n- Worked on a team project -> Owned the [feature]; cut [metric] by 30%\n- Knows '+(top[0]||'X')+' -> Built 2 projects with '+(top[0]||'X')+' — [live links]\n- Did an internship -> Shipped [feature] in [N] weeks -> [measurable result]\n';
+    return t;
+  }
+};
+window.switchRoleTab=function(idx){
+  document.querySelectorAll('.role-panel').forEach(function(p,i){ p.classList.toggle('active',i===idx); });
+  document.querySelectorAll('.rsub').forEach(function(b,i){ b.classList.toggle('active',i===idx); });
+};
+window.switchSTab=function(btn,id){
+  var nav=btn.parentNode;
+  var content=nav.nextElementSibling;
+  nav.querySelectorAll('.s-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  content.querySelectorAll('.s-panel').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById(id); if(t) t.classList.add('active');
+};
+var DEFAULT_TK=['<b>GitHub, ATS-safe format and LinkedIn</b> are the three things every fresher resume must nail.','Download a template below and <b>fill it with YOUR projects</b> — don\'t start from a blank page.','Every bullet = <b>action verb + a number</b>. That\'s the single fastest score lift.'];
+function mustHaves(){
+  var items=[
+    ['','GitHub','Recruiters click it before they call you','Pin 2–3 deployed projects with clean READMEs. <a class="zlink" href="https://github.com/new" target="_blank" rel="noopener">Make a repo →</a>'],
+    ['','ATS-safe format','75% of resumes are rejected by robots first','Single column, standard headings, no tables/photos. <a class="zlink" href="https://docs.google.com/document/u/0/" target="_blank" rel="noopener">Use a plain Google Doc →</a>'],
+    ['','LinkedIn','Where recruiters search for you','Strong headline + the same keywords as your resume. <a class="zlink" href="https://www.linkedin.com/in/me/edit/intro/" target="_blank" rel="noopener">Edit headline →</a>']
+  ];
+  return '<h2 class="sec" style="margin-top:8px">Learn First — The 3 Must-Haves <span class="sec-tip">what matters, why, and how to do it</span></h2>'+
+    '<div class="info-grid4" style="grid-template-columns:1fr 1fr 1fr">'+items.map(function(it){
+      return '<div class="info-card what"><div class="ic-label">'+it[0]+' '+ZAP.esc(it[1])+'</div><p><b>Why:</b> '+it[2]+'<br><b>How:</b> '+it[3]+'</p></div>';
+    }).join('')+'</div>';
+}
+function resumeCheat(){
+  return ZAP.cheatCard('ATS Resume Cheatsheet — do these 8 things',[
+    'Save as <b>PDF</b>, named <code>Firstname_Role.pdf</code>',
+    '<b>Single column</b>, no tables, no photo, no graphics',
+    'Standard headings: <b>SUMMARY → SKILLS → PROJECTS → EXPERIENCE → EDUCATION</b>',
+    'Mirror the <b>exact skill words</b> from the job post (only the true ones)',
+    'Every project has a <b>live link + GitHub</b> and the word "deployed"',
+    'Every bullet = <b>verb + what + number</b> (e.g. "cut load time by 40%")',
+    'Add one <b>AI project</b> (even small) — it\'s now a filter',
+    'One page for freshers. Proofread twice.'
+  ]);
+}
+function idealSample(rn){
+  var s=ZAP.SKILLS[rn]||{primary:[],secondary:[]}; var top=(s.primary||[]).slice(0,3).map(function(x){return x.n;});
+  var sk=(s.primary||[]).concat(s.secondary||[]).slice(0,8).map(function(x){return x.n;}).join(' → ')||'[skills]';
+  var body='<div class="sample-resume"><h5>AARAV SHARMA</h5>'+ZAP.esc(rn)+' → Bengaluru → aarav@email.com → github.com/aarav → linkedin.com/in/aarav'+
+    '<div class="rs-sec"><div class="rs-ttl">Summary</div>'+ZAP.esc(rn)+' focused on '+ZAP.esc(top.join(', ')||'[core skills]')+'. Built and deployed 2 live projects. Seeking a fresher '+ZAP.esc(rn)+' role.</div>'+
+    '<div class="rs-sec"><div class="rs-ttl">Skills</div>'+ZAP.esc(sk)+'</div>'+
+    '<div class="rs-sec"><div class="rs-ttl">Projects</div>" TaskFlow — built with '+ZAP.esc(top[0]||'[stack]')+'; <b>deployed</b> on Vercel, used by <b>200+</b> users. Live: taskflow.vercel.app → GitHub<br>" DataView — '+ZAP.esc(top[1]||'dashboard')+' app; cut report time by <b>60%</b>. Live link → GitHub</div>'+
+    '<div class="rs-sec"><div class="rs-ttl">Experience / Internships</div>" Intern @ StartupX — shipped the [feature] in 6 weeks → +15% signups.</div>'+
+    '<div class="rs-sec"><div class="rs-ttl">Education</div>B.Tech CSE, [College], 2026 → CGPA 8.1</div></div>';
+  return ZAP.sampleReport('ideal '+rn+' resume (filled example to copy)', body);
+}
+function roleKeywords(rn){var s=ZAP.SKILLS[rn]||{primary:[],secondary:[],tools:[],tech:[]};return s.primary.concat(s.secondary,s.tools,s.tech).map(function(x){return x.n;});}
+function param(label,score,note,cls){
+  return '<div class="skill-row"><div><b>'+label+'</b><div style="font-size:11px;color:var(--slate-light)">'+ZAP.esc(note)+'</div></div>'+ZAP.ratingBar(score,cls)+'<div style="text-align:right;font-weight:800;color:var(--navy)">'+score+'%</div></div>';
+}
+var PARAM_NAMES=['ATS structure','Role keyword match','Project evidence','Domain language','AI fluency','Impact / metrics'];
+function scoreResume(rn,txt){
+  var kws=roleKeywords(rn);
+  var found=kws.filter(function(k){return has(txt,k.toLowerCase().split(' (')[0].split('/')[0].toLowerCase());});
+  var missing=kws.filter(function(k){return found.indexOf(k)<0;});
+  var sections=["experience","education","skills","project"].filter(function(s){return has(txt,s);});
+  var ats=pct(sections.length,4);
+  var kw=Math.min(100,pct(found.length,Math.max(8,Math.round(kws.length*0.6))));
+  var evid=Math.min(100,(has(txt,"http")?40:0)+(has(txt,"github")?25:0)+(has(txt,"deployed")||has(txt,"live")?35:0));
+  var dom=Math.min(100,DOMAIN_WORDS.filter(function(w){return has(txt,w);}).length*20);
+  var ai=Math.min(100,AI_WORDS.filter(function(w){return has(txt,w);}).length*16);
+  var metrics=Math.min(100,((txt.match(/\d+%/g)||[]).length*25)+(ACTION_VERBS.filter(function(w){return has(txt,w);}).length*8));
+  var arr=[ats,kw,evid,dom,ai,metrics];
+  return {ats:ats,kw:kw,evid:evid,dom:dom,ai:ai,metrics:metrics,arr:arr,overall:Math.round(arr.reduce(function(a,b){return a+b;},0)/6),found:found,missing:missing,sections:sections,aiList:AI_WORDS.filter(function(w){return has(txt,w);})};
+}
+function weakestParam(sc){ var min=101,idx=0; sc.arr.forEach(function(v,i){ if(v<min){min=v;idx=i;} }); return {name:PARAM_NAMES[idx],score:min}; }
+function glance5(rn,txt){
+  var sc=scoreResume(rn,txt); var w=weakestParam(sc);
+  var cls=sc.overall>=70?'vh-green':sc.overall>=45?'vh-amber':'vh-red';
+  var hero='<div class="verdict-hero '+cls+'"><div class="vh-lbl">RESUME SCORE → '+ZAP.esc(rn)+'</div><div class="vh-val">'+sc.overall+'%</div><div class="vh-sub">'+(sc.overall>=70?'Strong — clears most filters':sc.overall>=45?'Needs work — fixable gaps below':'At risk — likely filtered before a human reads it')+'</div></div>';
+  var cells=[
+    {l:'WEAKEST AREA',v:w.name,s:w.score+'% — fix this first'},
+    {l:'ROLE KEYWORDS',v:sc.found.length+' found',s:sc.missing.length+' missing (listed below)'},
+    {l:'AI SIGNAL',v:sc.ai>=50?'present':'weak',s:sc.aiList.length?sc.aiList.slice(0,3).join(', '):'add an AI project'},
+    {l:'EVIDENCE',v:sc.evid>=50?'good':'thin',s:has(txt,'deployed')||has(txt,'live')?'deploy mentioned':'no deploy signal'}
+  ];
+  var glance='<div class="glance">'+cells.map(function(c){return '<div class="g-cell"><div class="g-lbl">'+c.l+'</div><div class="g-val">'+ZAP.esc(c.v)+'</div><div class="g-sub">'+ZAP.esc(c.s)+'</div></div>';}).join('')+'</div>';
+  var tk=['Fix your weakest area first: <b>'+ZAP.esc(w.name)+'</b> ('+w.score+'%).','Add the <b>'+sc.missing.length+' missing role keywords</b> (only the true ones) to clear ATS.','Every bullet should be <b>action verb + number</b> — that\'s the single fastest score lift.'];
+  window.__TK=tk; return hero+glance;
+}
+function leadRec5(rn,txt){
+  var sc=scoreResume(rn,txt); var w=weakestParam(sc);
+  return [{t:'Your lowest score is "'+w.name+'" ('+w.score+'%) — fix this first',b:'It\'s dragging your overall score the most. '+(w.name==='Role keyword match'?'Add the missing role keywords listed below.':w.name==='Project evidence'?'Add live links + GitHub + the word "deployed".':w.name==='Impact / metrics'?'Rewrite bullets as action verb + a number.':w.name==='AI fluency'?'Add one AI tool/project and list it.':w.name==='Domain language'?'Weave in your target industry\'s vocabulary.':'Use standard EXPERIENCE / SKILLS / PROJECTS sections.')}];
+}
+function aiGap(ai,aiList){
+  var missing=["A project that uses an AI/LLM tool","Prompt-engineering or RAG mention","An automation you built with AI","AI tools listed in your skills (e.g. Copilot, ChatGPT, LangChain)"];
+  return '<h3 class="sub" style="margin-top:14px">> AI-Gap Report</h3><div class="'+(ai>=50?'success-box':'risk')+'" style="margin-top:4px"><div class="lbl">'+(ai>=50?'AI SIGNAL: PRESENT':'AI SIGNAL: WEAK')+'</div>'+(ai>=50?'<p>Your resume shows AI fluency ('+aiList.slice(0,4).join(', ')+'). Keep one AI project front and center.</p>':'<div class="body">Companies increasingly filter for AI-aware candidates. Add:</div><ul class="checklist">'+missing.map(function(m){return '<li><span class="chk"></span><span>'+ZAP.esc(m)+'</span></li>';}).join('')+'</ul>')+'</div>';
+}
+function renderResumeKit(rn, txt, mode){
+  var s=ZAP.SKILLS[rn]||{primary:[],secondary:[],tools:[],tech:[]};
+  var top=(s.primary||[]).slice(0,3).map(function(x){return x.n;});
+  var sk=(s.primary||[]).concat(s.secondary||[]).slice(0,8).map(function(x){return x.n;}).join(' → ')||'[skills]';
+
+  var idealCV='<div class="sample-resume"><h5>AARAV SHARMA</h5>'+ZAP.esc(rn)+' → Bengaluru → aarav@email.com → github.com/aarav → linkedin.com/in/aarav'+
+    '<div class="rs-sec"><div class="rs-ttl">Summary</div>'+ZAP.esc(rn)+' focused on '+ZAP.esc(top.join(', ')||'[core skills]')+'. Built and deployed 2 live projects. Seeking a fresher '+ZAP.esc(rn)+' role.</div>'+
+    '<div class="rs-sec"><div class="rs-ttl">Skills</div>'+ZAP.esc(sk)+'</div>'+
+    '<div class="rs-sec"><div class="rs-ttl">Projects</div>" TaskFlow — built with '+ZAP.esc(top[0]||'[stack]')+'; <b>deployed</b> on Vercel, used by <b>200+</b> users. Live: taskflow.vercel.app → GitHub<br>" DataView — '+ZAP.esc(top[1]||'dashboard')+' app; cut report time by <b>60%</b>. Live link → GitHub</div>'+
+    '<div class="rs-sec"><div class="rs-ttl">Experience / Internships</div>" Intern @ StartupX — shipped the [feature] in 6 weeks → +15% signups.</div>'+
+    '<div class="rs-sec"><div class="rs-ttl">Education</div>B.Tech CSE, [College], 2026 → CGPA 8.1</div></div>';
+
+  var fillableCV='<div class="sample-resume"><h5>[YOUR NAME]</h5>'+ZAP.esc(rn)+' → [City] → [email] → [GitHub] → [LinkedIn]'+
+    '<div class="rs-sec"><div class="rs-ttl">Summary</div>'+ZAP.esc(rn)+' focused on '+ZAP.esc(top.join(", ")||'[core skills]')+'. Built and deployed [N] projects. Looking for [target].</div>'+
+    '<div class="rs-sec"><div class="rs-ttl">Skills</div>'+ZAP.esc((s.primary||[]).concat(s.secondary||[]).slice(0,8).map(function(x){return x.n;}).join(" → "))+'</div>'+
+    '<div class="rs-sec"><div class="rs-ttl">Projects</div>- [Project] — built with '+ZAP.esc(top[0]||'[stack]')+'. [Result/metric]. [Live URL] → [GitHub]<br>- [Project 2] — [what] using [stack]. [Result].</div>'+
+    '<div class="rs-sec"><div class="rs-ttl">Experience / Internships</div>- [Role] @ [Org] — [what you did] → [measurable result].</div>'+
+    '<div class="rs-sec"><div class="rs-ttl">Education</div>[Degree], [College], [Year] → [CGPA if strong]</div></div>';
+
+  var readme='<div class="sample-resume">### Hi, I\'m [Name] <br>'+ZAP.esc(rn)+' → '+ZAP.esc(top.join(" / ")||'[skills]')+'<br><br>**Pinned Projects**<br>- [Project] — '+ZAP.esc(top[0]||'[skill]')+' → [live link] → [repo]<br>- [Project 2] — [stack] → [live link]<br><br>**Skills:** '+ZAP.esc(top.join(", ")||'[skills]')+'<br>**Reach me:** [email] → [LinkedIn]</div>';
+  var heads='<ul class="checklist"><li><span class="chk"></span><span>'+ZAP.esc(rn)+' → '+ZAP.esc(top.slice(0,2).join("/")||'[skills]')+' → [N] deployed projects</span></li>'+
+    '<li><span class="chk"></span><span>Aspiring '+ZAP.esc(rn)+' | Building with '+ZAP.esc(top[0]||'[skill]')+' | Open to opportunities</span></li>'+
+    '<li><span class="chk"></span><span>'+ZAP.esc(rn)+' | '+ZAP.esc(top.join(", ")||'[skills]')+' | [College] \'[YY]</span></li></ul>';
+  var ba=ZAP.table(['WEAK (before)','STRONG (after)'],[
+    ['Made a website','Built &amp; <b>deployed</b> a '+ZAP.esc(top[0]||'web')+' app used by <b>200+</b> users'],
+    ['Worked on a team project','<b>Owned</b> the [feature]; <b>cut</b> [metric] by <b>30%</b>'],
+    ['Knows '+ZAP.esc(top[0]||'X'),'Built 2 projects with '+ZAP.esc(top[0]||'X')+' — [live links]'],
+    ['Did an internship','Shipped [feature] in [N] weeks → [measurable result]']
+  ]);
+
+  var sc=scoreResume(rn,txt);
+  var w=weakestParam(sc);
+
+  // Bento snapshot
+  var hcls=mode==='scored'?(sc.overall>=70?'vh-green':sc.overall>=45?'vh-amber':'vh-red'):'vh-cyan';
+  var verdict = '<div class="verdict-col">' +
+    '<div class="verdict-hero ' + hcls + '">' +
+      '<div class="vh-lbl">RESUME STATUS</div>' +
+      '<div class="vh-val">' + (mode==='scored'?sc.overall+'%':'PREP KIT') + '</div>' +
+      '<div class="vh-sub">' + (mode==='scored'?(sc.overall>=70?'Strong — clears filters':sc.overall>=45?'Fixable gaps':'At risk — likely filtered'):'Framework template &amp; checklists ready.') + '</div>' +
+    '</div>' +
+  '</div>';
+
+  var cells=mode==='scored'?[
+    {l:'WEAKEST AREA',v:w.name,s:w.score+'% — fix first'},
+    {l:'ROLE KEYWORDS',v:sc.found.length+' found',s:sc.missing.length+' missing'},
+    {l:'AI SIGNAL',v:sc.ai>=50?'present':'weak',s:sc.aiList.length?sc.aiList.slice(0,2).join(', '):'add AI project'},
+    {l:'EVIDENCE',v:sc.evid>=50?'good':'thin',s:has(txt,'deployed')?'deploy mentioned':'no deploy signal'}
+  ]:[
+    {l:'TARGET ROLE',v:rn,s:'ready for templates'},
+    {l:'MUST-HAVES',v:'3 Items',s:'GitHub + ATS + LinkedIn'},
+    {l:'CV FORMAT',v:'Single Column',s:'no tables/photos'},
+    {l:'PREP METHOD',v:'Verbs + Metrics',s:'fastest score lift'}
+  ];
+  
+  var kpi_row = ZAP.kpiRow(cells.map(function(c){
+    return {lbl: c.l, val: c.v, sub: c.s, cls: mode==='scored'?'trend':'pos'};
+  }));
+  var bento = '<div class="bento-snapshot">' + verdict + '<div class="data-col">' + kpi_row + '</div></div>';
+
+  var id = rn.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
+  var scorePanel = mode==='scored'?(
+    '<div class="s-panel active" id="'+id+'-score">'+
+      '<h3 class="sub" style="margin-top:0">6-Parameter Analysis</h3><div class="bar-wrap" style="padding:4px 0">'+
+      param('1 → ATS structure',sc.ats,sc.sections.length+'/4 standard sections detected','must')+
+      param('2 → Role keyword match',sc.kw,sc.found.length+' of your role keywords found','imp')+
+      param('3 → Project evidence',sc.evid,(has(txt,'http')?'links present':'no links')+' → '+(has(txt,'deployed')||has(txt,'live')?'deploy mentioned':'no deploy signal'),'good')+
+      param('4 → Domain language',sc.dom,'industry vocabulary signal','good')+
+      param('5 → AI fluency',sc.ai,sc.aiList.length?('found: '+sc.aiList.slice(0,5).join(', ')):'no AI signal detected','learn')+
+      param('6 → Impact / metrics',sc.metrics,'numbers + strong action verbs','learn')+'</div>'+
+      '<h3 class="sub" style="margin-top:14px"> Missing Role Keywords <span class="htip">add the true ones to your resume</span></h3>'+
+      (sc.missing.length?'<p style="font-size:13px">'+sc.missing.slice(0,16).map(function(k){return '<span class="tag trd" style="margin:2px">'+ZAP.esc(k)+'</span>';}).join(' ')+'</p>':'<p class="success-box" style="padding:10px">Great coverage — most role keywords are present.</p>')+
+      aiGap(sc.ai,sc.aiList)+
+    '</div>'
+  ):(
+    '<div class="s-panel active" id="'+id+'-score">'+
+      '<h3 class="sub" style="margin-top:0">The 6 ATS Parameters</h3><ul class="checklist">'+
+      ["ATS structure — clear EXPERIENCE / EDUCATION / SKILLS / PROJECTS sections, no tables/columns","Role keywords — the right skill terms present (bank below)","Project evidence — live links + GitHub + 'deployed'","Domain language — words from your target industry","AI fluency — at least one AI tool/project","Impact / metrics — numbers and strong action verbs"].map(function(p){return '<li><span class="chk"></span><span>'+ZAP.esc(p)+'</span></li>';}).join('')+'</ul>'+
+      '<h3 class="sub" style="margin-top:12px"> Keyword Bank for '+ZAP.esc(rn)+'</h3><p>'+roleKeywords(rn).slice(0,14).map(function(k){return '<span class="tag tc" style="margin:2px">'+ZAP.esc(k)+'</span>';}).join(' ')+'</p>'+
+      aiGap(0,[])+
+    '</div>'
+  );
+
+  var deepDive = '<div class="deep-dive">' +
+    '<aside class="sidebar-nav">' +
+      '<button class="s-tab active" onclick="switchSTab(this, \''+id+'-score\')">📊 Score &amp; Keywords</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-cv\')">📄 CV Template</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-profile\')">📝 Profile Pack</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-bullets\')">🔄 Bullet Rewrites</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-ideal\')">🎓 Ideal Sample CV</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-cheatsheet\')">📋 Checklists &amp; Cheats</button>' +
+    '</aside>' +
+    '<div class="sidebar-content">' +
+      scorePanel +
+      '<div class="s-panel" id="'+id+'-cv">' +
+        '<h3 class="sub" style="margin-top:0">Fillable ATS-Safe CV Template</h3>' +
+        '<p style="font-size:12px;color:var(--slate-light);margin-bottom:6px">ATS-safe: single column, standard sections, no tables/graphics.</p>'+fillableCV +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-profile">' +
+        '<h3 class="sub" style="margin-top:0">GitHub Profile README Template</h3>' + readme +
+        '<h3 class="sub" style="margin-top:20px">LinkedIn Headlines</h3><p style="font-size:12px;color:var(--slate-light);margin-bottom:6px">Pick the headline that fits — tap to check off.</p>' + heads +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-bullets">' +
+        '<h3 class="sub" style="margin-top:0">Before → After Bullet Rewrites</h3>' + ba +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-ideal">' +
+        '<h3 class="sub" style="margin-top:0">Filled-in Ideal Sample Resume</h3>' + idealCV +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-cheatsheet">' +
+        resumeCheat() +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  return '<div class="role-report" style="border:0;padding:0;">'+
+    bento +
+    deepDive +
+    '</div>';
+}
+var RECS=[
+  {t:"Add the missing role keywords — truthfully — and standard section headers",b:"Mirror the exact skill terms from the bank where they're real for you. Use plain EXPERIENCE/SKILLS/PROJECTS sections."},
+  {t:"Rewrite bullets as metric + action verb",b:"Every bullet: strong verb + what + measurable result. This lifts the impact score and convinces humans too."},
+  {t:"Add one AI project and list your AI tools",b:"Close the AI gap with a real project (even a small RAG/automation) and list the tools you actually used."}
+];
+
+/* ---- standard boot (identical across agents) ---- */
+(function(){
+  if(AGENT.info) ZAP.mountInfo('info', AGENT.info);
+  var s=AGENT.selector||{type:'roles',multi:true};
+  // chaining: restore role selection carried from a previous role-based agent
+  var restore=[];
+  if(s.type==='roles'){ var saved=ZAP.recall('roles'); if(saved&&saved.length){ restore=saved; ZAP.carryBanner('carryBanner', saved); } }
+  if(s.type==='roles') ZAP.mountRoles('roleGrid', {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel, restore:restore});
+  else ZAP.mountChips('roleGrid', s.items||[], {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel});
+  // prefill resume textarea if one exists and we have remembered resume text
+  var rt=document.getElementById('resumeText'); var savedResume=ZAP.recall('resume');
+  if(rt&&savedResume&&!rt.value) rt.value=savedResume;
+  // copt (Step 2) selection
+  document.addEventListener('click', function(e){
+    var o=e.target.closest && e.target.closest('.copt');
+    if(o){ var g=o.parentNode; g.querySelectorAll('.copt').forEach(function(x){x.classList.remove('active');}); o.classList.add('active'); }
+  });
+  window.optVal=function(id){ var e=document.querySelector('#'+id+' .copt.active'); return e?e.textContent.trim():''; };
+  function run(){
+    var sel=ZAP.selected('roleGrid');
+    if(!sel.length){ alert('Please select at least one '+(AGENT.unit||'role')+' first.'); return; }
+    // chaining: remember role selection + any resume text for the next agent
+    if(s.type==='roles'){ ZAP.remember('roles', sel); ZAP.remember('role', sel[0]); }
+    var rtx=document.getElementById('resumeText'); if(rtx&&rtx.value&&rtx.value.replace(/\s/g,'').length>40) ZAP.remember('resume', rtx.value);
+    ZAP.showReport();
+    AGENT.report(sel);
+    var dl=document.getElementById('dl-btn');
+    if(dl) dl.onclick=function(){ ZAP.download(AGENT.dlname||'zapit_report.txt', AGENT.dltext?AGENT.dltext(sel):JSON.stringify(sel)); };
+  }
+  document.getElementById('run-btn').addEventListener('click', run);
+})();
+</script>
+</body>
+</html>

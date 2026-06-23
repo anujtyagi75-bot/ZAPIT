@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Industry Prep Kit — Company Horoscope — ZAP IT</title>
+<link rel="stylesheet" href="_shared.css">
+<style>.role-report{border:2px solid var(--border);border-top:4px solid var(--cyan);border-radius:8px;padding:24px;margin:16px 0}.tab-wrap{margin-top:4px}</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="brand">ZAP<em>IT</em></a>
+  <div class="topbar-right"><a href="index.html" class="tbtn">← All Agents</a></div>
+</div>
+<div class="wrap">
+  <div class="agent-hdr">
+    <div class="step-tag">AGENT 10 · PREP KIT</div>
+    <div class="title-row"><div class="agent-ico">&#127970;</div><div><h1>Industry-Specific Prep Kit</h1></div></div>
+    <div class="agent-desc">One PrepKit per company — three reports bundled: Company Deep-Dive, Salary &amp; Negotiation, and Interview Trend. Pick a company off the shelf, download the kit, walk in prepared. Indicative data — verify before acting.</div>
+  </div>
+  <div class="agent-info" id="info"></div>
+  <div class="config-panel">
+    <div class="config-panel-title"><span>&#9881;</span> Step 1 — Select Company(ies) <span class="rolecount" data-rolecount style="margin-left:8px">none selected</span></div>
+    <div class="step-note">Pick one or more companies, or “All Companies”. Profiles are indicative — verify officially.</div>
+    <div id="carryBanner"></div>
+    <div class="role-grid" id="roleGrid"></div>
+    
+    <button class="run-btn" id="run-btn">&#9889; Generate Company PrepKit</button>
+    <button type="button" class="dl-btn" style="margin-left:10px;vertical-align:middle" onclick="(function(){var a=document.querySelector('#roleGrid .all-roles');if(a&&!a.classList.contains('sel'))a.click();document.getElementById('run-btn').click();setTimeout(function(){var d=document.getElementById('dl-btn');if(d)d.click();},220);})()"> Download All Companies (bundle)</button>
+    <div class="run-note">Each kit bundles the Company Deep-Dive, Salary &amp; Negotiation, and Interview Trend reports. Indicative — verify before acting. Fully offline.</div>
+  </div>
+  <div class="report-wrap" id="report-wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      <button class="dl-btn" id="dl-btn">&#11015; Download (.txt)</button>
+      <button class="nfbtn" onclick="window.print()">&#128424; Print</button>
+    </div>
+    <div id="reports-container"></div>
+  </div>
+  <div class="nav-footer">
+    <a class="nfbtn" href="index.html">← All Agents</a>
+    <a class="nfbtn primary" href="11_cheatsheets.html">Next: Cheatsheets &rarr;</a>
+  </div>
+</div>
+<script src="_engine.js"></script>
+<script src="_skills.js"></script>
+<script>
+/* Agent 13 — Industry Prep Kit (Company Horoscope). HEAVILY INDICATIVE. */
+var GROUP_DEFAULTS={
+"services":{process:["Apply via campus/portal/referral","Online aptitude + basic coding","Technical interview","HR / managerial round"],rounds:["Aptitude (quant, logical, verbal)","Coding basics (1–2 problems)","Technical: projects + fundamentals","HR: communication + fit"],culture:"Process-driven, training-heavy, values reliability and communication over flashy skills. Large fresher intake.",tips:["Polish aptitude — it's often the real filter","Be able to explain every resume line","Communication matters as much as code","Be genuine in HR; they screen attitude"],salary:"₹3.0–5.5L (fresher, indicative)",neg:"Limited for freshers at scale; bands are largely fixed. Focus on role/project allocation over CTC."},
+"consulting":{process:["Apply via campus/portal","Aptitude + case/critical thinking","Technical/functional interview","Partner/HR round"],rounds:["Aptitude + reasoning","Case or domain discussion","Technical or functional depth","Fit / values round"],culture:"Client-facing, structured thinking and communication prized. Domain + analytical blend.",tips:["Practice structured problem-solving out loud","Show business/analytical sense, not just code","Communication and presence matter","Know the firm's service lines"],salary:"₹4.5–8L (fresher, indicative)",neg:"Some flexibility for strong profiles/competing offers; lead with value and fit."},
+"product":{process:["Apply via referral/portal","Online assessment (DSA)","1–2 technical rounds","Hiring manager + culture round"],rounds:["DSA online test","DSA / problem-solving interview","System/role depth + projects","Hiring manager + culture fit"],culture:"Merit + projects driven. Values builders who can explain trade-offs and ship. Smaller, selective intake.",tips:["Deployed projects matter more than CGPA","Be ready to go deep on your own code","Practice DSA patterns for the online test","Show you understand their product"],salary:"₹7–14L (fresher, indicative)",neg:"More room for strong, evidenced candidates — projects + competing offers help."}
+};
+/* extra fields to power the 3 bundled reports (Deep-Dive / Salary / Trend) */
+var GROUP_EXTRA={
+"services":{volume:"Very High",screens:["Aptitude (quant / logical / verbal)","CS fundamentals — DSA-lite, DBMS, OS, OOP","One programming language basics","Communication"],tests:"Online aptitude + 1–2 basic coding problems; some drives add pseudocode MCQs. Sectional cut-offs are common.",timing:"Bulk fresher drives via campus + national online tests (NQT-style), typically Aug–Mar.",raises:["A cleared certification (cloud / DB)","Strong communication in the HR round","A deployed project on the resume","A higher aptitude / test percentile"],trend:["Tell me about yourself","Explain your final-year project end to end","DBMS — joins, normalization, indexes","OOP pillars with real examples","A simple coding problem (string / array)"],shift:"Shortlisting now leans on a single national online test; basic cloud / AI awareness has become a plus."},
+"consulting":{volume:"Medium–High",screens:["Aptitude + critical reasoning","Structured problem-solving","Business / analytical sense","Communication & presence"],tests:"Aptitude + a case or scenario; some tracks add a technical / functional round.",timing:"Campus + analyst drives; rolling through the year, peak in placement season.",raises:["A competing offer","Strong case-interview performance","Relevant domain exposure","Polished communication"],trend:["A guesstimate / case question","Why consulting and why this firm","Walk me through a problem you solved","Domain or functional basics","Behavioural — teamwork / conflict"],shift:"More data / analytics fluency expected even in functional tracks."},
+"product":{volume:"Selective",screens:["DSA / problem-solving","CS fundamentals + system basics","Project depth & trade-offs","Code / product ownership"],tests:"Online DSA assessment (1–3 problems, LC easy–medium) — a strong shortlisting signal.",timing:"Selective, referral + portal; smaller batches, often off-campus year-round.",raises:["2+ deployed projects","Competing offers","Strong DSA + system-design-lite","Visible open-source / GitHub"],trend:["DSA — arrays / strings / hashmaps, then trees / graphs","Explain a project's architecture & trade-offs","Design a small feature (machine coding)","Why this product / company","Behavioural — ownership, debugging a hard bug"],shift:"AI-tool fluency and shipping evidence increasingly required; take-home / machine-coding rounds more common."}
+};
+var COMPANIES={
+"Coforge":{grp:"services",ico:"•",about:"Global IT services & digital company (Greater Noida HQ presence). Hires freshers across digital, cloud, data and platform work.",tipsX:["Coforge values domain + digital skills — show one domain interest","Be clear on why Coforge specifically"],
+  exam:"Coforge fresher hiring typically runs an online assessment: aptitude (quant/logical/verbal) + basic coding (1–2 problems) + sometimes a communication/versant test, followed by technical and HR rounds. Pattern varies by drive — confirm on the official careers page.",
+  horo:{vision:"To be a leading global digital services & solutions partner — using AI, cloud and domain depth to transform regulated industries.",hq:"Greater Noida, India (registered) → Global delivery + sales hubs.",locations:"India: Greater Noida, Noida, Gurugram, Hyderabad, Bengaluru, Pune, Mumbai, Kolkata. Global: USA, UK, Europe, Middle East, APAC.",focus:"Banking & Financial Services (BFSI), Insurance, Travel & Transportation, and Public Sector — plus cross-cutting Digital, Cloud, Data/AI and Automation.",specifics:["Strong in INSURANCE & TRAVEL domains — domain interest is a real edge here.","Owns digital/integration platforms — platform + integration skills are valued.","AI + cloud + automation are current growth bets.","Values communication, ownership and domain curiosity in freshers."]}},
+"TCS":{grp:"services",ico:"•",about:"India's largest IT services firm. Huge fresher intake via TCS NQT.",tipsX:["Prepare specifically for the TCS NQT pattern","NQT score drives shortlisting"],exam:"TCS National Qualifier Test (NQT): Numerical, Verbal, Reasoning + a Programming Logic & Coding section. A strong NQT score is the main shortlisting filter. TCS Digital / Prime are higher bands with harder coding."},
+"Infosys":{grp:"services",ico:"•",about:"Top-tier IT services; structured fresher hiring and strong training (Mysuru).",tipsX:["InfyTQ / certification helps","Strong fundamentals + communication"],exam:"InfyTQ / Infosys assessment: aptitude + pseudocode/coding + technical MCQs, then technical + HR interviews. InfyTQ certification can fast-track you."},
+"Wipro":{grp:"services",ico:"•",about:"Large IT services firm; elite + regular fresher tracks.",tipsX:["Know which track you're applying to","Aptitude is a key filter"]},
+"Cognizant":{grp:"services",ico:"•",about:"IT services & consulting; sizeable fresher hiring (GenC tracks).",tipsX:["Understand the GenC track levels","Coding + communication balance"]},
+"HCLTech":{grp:"services",ico:"•",about:"IT & engineering services; early-career programs (TechBee/fresher).",tipsX:["Engineering/infra roles common","Be open on role allocation"]},
+"Capgemini":{grp:"services",ico:"•",about:"Global services & consulting; structured fresher pipeline.",tipsX:["Pseudocode round appears in some drives","Aptitude + basics"]},
+"Accenture":{grp:"services",ico:"•",about:"Global professional services; large fresher intake across tech.",tipsX:["Cognitive + technical assessment","Communication assessment matters"]},
+"LTIMindtree":{grp:"services",ico:"•",about:"IT services & digital; campus + off-campus fresher hiring.",tipsX:["Aptitude + coding basics","Clarity on projects"]},
+"Tech Mahindra":{grp:"services",ico:"•",about:"IT & networking services; broad fresher hiring.",tipsX:["Telecom/network domains common","Communication round emphasis"]},
+"Deloitte":{grp:"consulting",ico:"•",about:"Big-4 consulting & technology; analyst/engineering fresher roles.",tipsX:["Show structured thinking","Know the service line you applied to"]},
+"KPMG":{grp:"consulting",ico:"•",about:"Big-4 advisory & tech; analytical fresher roles.",tipsX:["Business + analytical sense","Communication and presence"]},
+"PwC":{grp:"consulting",ico:"•",about:"Big-4 advisory & technology consulting.",tipsX:["Case/scenario thinking","Domain awareness helps"]},
+"EY":{grp:"consulting",ico:"•",about:"Big-4 advisory & technology; consulting + tech tracks.",tipsX:["Structured answers","Fit + values round matters"]},
+"Razorpay":{grp:"product",ico:"•",about:"Leading FinTech (payments) product company. Selective, projects-driven hiring.",tipsX:["FinTech context (idempotency, reconciliation) helps","Deep on one real project"]},
+"Zoho":{grp:"product",ico:"•",about:"Bootstrapped product company; strong engineering culture, own assessment.",tipsX:["Programming depth over buzzwords","Zoho has its own multi-round test"],exam:"Zoho's own multi-round process: programming MCQs → 2 coding rounds (increasing difficulty) → advanced/design round → technical + HR. Depth in one language beats buzzwords."},
+"Freshworks":{grp:"product",ico:"•",about:"SaaS product company; product engineering roles.",tipsX:["SaaS/product sense helps","DSA + projects"]}
+};
+function merge(cn){var c=COMPANIES[cn];var g=GROUP_DEFAULTS[c.grp];return {ico:c.ico,about:c.about,grp:c.grp,process:g.process,rounds:g.rounds,culture:g.culture,tips:g.tips.concat(c.tipsX||[]),salary:g.salary,neg:g.neg,exam:c.exam,horo:c.horo};}
+var AGENT={
+  unit:'company', dlname:'zapit_industry_kit.txt',
+  info:{
+    what:"A company-specific prep kit — pick a company and get its 'horoscope': how they hire, their screening, typical rounds, culture signals, insider tips, indicative salary band and a negotiation note.",
+    why:"Going into a Coforge or Razorpay interview without company-specific intelligence is a disadvantage. This tells you what to expect and how to show up.",
+    features:["Report 1 — Company Deep-Dive: hiring volume, skills screened, process, rounds, test pattern, package, timing","Report 2 — Salary & Negotiation: base band, what raises it, do's & don'ts","Report 3 — Interview Trend: currently-asked questions + recent shifts","All three reports bundled per company","Pick one company or download the whole shelf","Stamped with a last-updated date"],
+    examples:["Coforge: services pattern + domain/digital emphasis","TCS: prepare for the NQT specifically","Razorpay: FinTech context + deep project ownership"]
+  },
+  selector:{type:'chips', items:Object.keys(COMPANIES).map(function(k){return {n:k,ico:COMPANIES[k].ico,sub:COMPANIES[k].grp};}), multi:true, allLabel:'All Companies'},
+  report:function(comps){
+    var c=document.getElementById('reports-container');
+    var html='<div class="step-note" style="margin:0 0 10px"> Kit data last updated: <b>Jun 2026</b> — hiring volumes, salary bands and interview trends change every cycle; re-verify before acting.</div>'+
+      '<div class="risk" style="margin:0 0 14px"><div class="lbl">READ THIS</div><div class="body">These company profiles are <b>indicative</b> — built from general, publicly-known patterns, not insider or verified data. Always confirm with the official careers page and recent candidate experiences. '+ZAP.indic('Indicative')+'</div></div>';
+    
+    html+='<div class="report-panel" id="rpanel-role">';
+    if(comps.length===1){
+      html+=renderCompany(comps[0]);
+    } else {
+      html+='<div class="report-sub-tabs">';
+      comps.forEach(function(cn,i){
+        html+='<button class="rsub'+(i===0?' active':'')+'" onclick="switchRoleTab('+i+')">'+ZAP.esc(cn)+'</button>';
+      });
+      html+='</div>';
+      comps.forEach(function(cn,i){
+        html+='<div class="role-panel'+(i===0?' active':'')+'" id="rp-'+i+'">';
+        html+=renderCompany(cn);
+        html+='</div>';
+      });
+    }
+    html+='</div>';
+    
+    html+=ZAP.closeout(RECS, {href:'11_cheatsheets.html',label:'Agent 11 · Cheatsheets',desc:'Grab a ready checklist — Get-Job-in-60-Days, Crack-Interview and more.'}, ['Prepare to each company\'s <b>specific exam pattern</b> (TCS NQT, Zoho test, Coforge assessment), not generically.','Build a genuine <b>"why this company"</b> answer tied to your work.','Treat this as a <b>starting map</b> — confirm on the official careers page.']);
+    c.innerHTML=html;
+  },
+  dltext:function(comps){
+    var t='ZAP IT — COMPANY PREPKIT\nLast updated: Jun 2026 (indicative — verify before acting)\n'+'='.repeat(48)+'\n\n';
+    comps.forEach(function(cn){ var d=merge(cn); if(!d) return; var x=GROUP_EXTRA[d.grp]||{};
+      t+=cn+'\n'+'-'.repeat(40)+'\n'+d.about+'\n\n';
+      t+='[1] COMPANY DEEP-DIVE\n';
+      t+=' Fresher hiring: '+(x.volume||'-')+' | Fresher CTC: '+d.salary+'\n';
+      t+=' Screens for: '+((x.screens||[]).join(', '))+'\n';
+      t+=' Process: '+d.process.join(' -> ')+'\n';
+      t+=' Rounds: '+d.rounds.join(' | ')+'\n';
+      t+=' Test pattern: '+(x.tests||'')+'\n';
+      if(d.exam) t+=' Internal exam pattern: '+d.exam+'\n';
+      if(d.horo) t+=' Vision: '+d.horo.vision+'\n Locations: '+d.horo.locations+'\n Focus: '+d.horo.focus+'\n';
+      t+=' Application timing: '+(x.timing||'')+'\n';
+      t+=' Culture: '+d.culture+'\n\n';
+      t+='[2] SALARY & NEGOTIATION\n';
+      t+=' Fresher base band: '+d.salary+'\n';
+      t+=' Raises your band: '+((x.raises||[]).join(', '))+'\n';
+      t+=' Negotiation note: '+d.neg+'\n\n';
+      t+='[3] INTERVIEW TREND\n';
+      t+=' Currently asked:\n   - '+((x.trend||[]).join('\n   - '))+'\n';
+      t+=' Recent shift: '+(x.shift||'')+'\n\n'+'='.repeat(40)+'\n\n';
+    });
+    return t;
+  }
+};
+/* full company "horoscope" — vision, locations, focus, specifics (Coforge etc.) */
+function horoscope(cn,h){
+  var facts=[[' Vision',h.vision],[' Headquarters',h.hq],[' Locations',h.locations],[' Focus areas',h.focus]]
+    .filter(function(f){return f[1];})
+    .map(function(f){return '<tr><td style="white-space:nowrap"><b>'+f[0]+'</b></td><td>'+ZAP.esc(f[1])+'</td></tr>';}).join('');
+  var spec=(h.specifics||[]).map(function(s){return '<li><span class="chk"></span><span>'+ZAP.esc(s)+'</span></li>';}).join('');
+  return '<div class="strong-insight" style="margin-top:0;border-top-color:var(--cyan)"><div class="lbl" style="color:var(--cyan)">=. COMPANY HOROSCOPE → '+ZAP.esc(cn)+'</div>'+
+    '<table class="t" style="margin-top:8px"><tbody>'+facts+'</tbody></table>'+
+    (spec?'<h4 class="micro" style="margin-top:10px">What makes '+ZAP.esc(cn)+' specific</h4><ul class="checklist">'+spec+'</ul>':'')+
+    '</div>';
+}
+function renderCompany(cn){
+  var d=merge(cn); if(!d) return ''; var x=GROUP_EXTRA[d.grp]||{};
+  var grpName={services:'IT Services',consulting:'Consulting / Advisory',product:'Product Company'}[d.grp];
+  var process=d.process.map(function(p){return '<div class="tl3-item">'+ZAP.esc(p)+'</div>';}).join('');
+  var rounds=d.rounds.map(function(r,i){return '<div class="acc-item"><div class="acc-hdr">Round '+(i+1)+': '+ZAP.esc(r)+'<span class="acc-ico">v</span></div><div class="acc-body">Prepare to demonstrate this stage clearly. Practise out loud and tie answers to your real projects.</div></div>';}).join('');
+  var tips='<ul class="checklist">'+d.tips.map(function(t){return '<li><span class="chk"></span><span>'+ZAP.esc(t)+'</span></li>';}).join('')+'</ul>';
+  var screens=(x.screens||[]).map(function(t){return '<span class="tag tc" style="margin:2px">'+ZAP.esc(t)+'</span>';}).join(' ');
+  var raises='<ul class="checklist">'+(x.raises||[]).map(function(t){return '<li><span class="chk"></span><span>'+ZAP.esc(t)+'</span></li>';}).join('')+'</ul>';
+  var trendQ=(x.trend||[]).map(function(q){return '<div class="flashcard"><div class="fc-q">'+ZAP.esc(q)+'</div></div>';}).join('');
+  var examPocket = d.exam ? ('<div class="cheat" style="margin-top:10px"><div class="cheat-tag">INTERNAL EXAM / TEST PATTERN POCKET</div><div class="cheat-ttl">'+ZAP.esc(cn)+' — how their test works</div><ul class="cheat-list"><li>'+ZAP.esc(d.exam)+'</li></ul></div>') : '';
+  var horo = d.horo ? horoscope(cn,d.horo) : '';
+  var negDos='<div class="config-grid"><div><h4 class="micro" style="color:var(--emerald)">– NEGOTIATION DO</h4><ul class="checklist"><li><span class="chk"></span><span>Lead with evidence — projects, offers, test percentile</span></li><li><span class="chk"></span><span>Be polite, specific and patient</span></li><li><span class="chk"></span><span>Ask about role / project allocation, not just CTC</span></li></ul></div><div><h4 class="micro" style="color:var(--crimson)"> NEGOTIATION DON\'T</h4><ul class="checklist"><li><span class="chk"></span><span>Bluff about offers you don\'t have</span></li><li><span class="chk"></span><span>Make CTC your only point</span></li><li><span class="chk"></span><span>Be aggressive or ultimatum-driven as a fresher</span></li></ul></div></div>';
+
+  var verdict = '<div class="verdict-col">' +
+    '<div class="verdict-hero vh-green">' +
+      '<div class="vh-lbl">PREP STATUS</div>' +
+      '<div class="vh-val">' + ZAP.esc(cn) + '</div>' +
+      '<div class="vh-sub">' + ZAP.esc(grpName) + '</div>' +
+    '</div>' +
+  '</div>';
+  
+  var kpis = ZAP.kpiRow([
+    {lbl:'HIRING VOLUME', val:x.volume||'—', sub:'indicative volume', cls:'demand'},
+    {lbl:'FRESHER CTC', val:d.salary, sub:'verify officially', cls:'pos'},
+    {lbl:'NEGOTIATION ROOM', val:d.grp==='product'?'Some':d.grp==='consulting'?'Limited–Some':'Limited', sub:'as a fresher', cls:'trend'},
+    {lbl:'APPLY WINDOW', val:'see note', sub:(x.timing||'').slice(0, 22), cls:'violet'}
+  ]);
+  
+  var aboutText = '<div class="sample-resume" style="margin:0"><h5>COMPANY PROFILE</h5>' + ZAP.esc(d.about) + '</div>';
+  var bento = '<div class="bento-snapshot">' + verdict + '<div class="data-col">' + kpis + aboutText + '</div></div>';
+
+  var id = cn.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
+  var deepDive = '<div class="deep-dive">' +
+    '<aside class="sidebar-nav">' +
+      '<button class="s-tab active" onclick="switchSTab(this, \''+id+'-dive\')">📊 Company Deep-Dive</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-salary\')">💰 Salary &amp; Negotiation</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-trend\')">📈 Interview Trends</button>' +
+    '</aside>' +
+    '<div class="sidebar-content">' +
+      '<div class="s-panel active" id="'+id+'-dive">' +
+        horo +
+        '<h4 class="micro" style="margin-top:16px">Skills they screen for</h4><p>'+screens+'</p>'+
+        '<h4 class="micro" style="margin-top:16px">Hiring process</h4><div class="bar-wrap" style="padding:10px 14px">'+process+'</div>'+
+        '<h4 class="micro" style="margin-top:16px">Typical rounds & test pattern <span class="htip" style="font-weight:400">tap to expand</span></h4>'+rounds+
+        '<div class="wow" style="margin-top:12px"><div class="lbl">TEST PATTERN (general for this category)</div><p>'+ZAP.esc(x.tests||'')+'</p></div>'+
+        examPocket+
+        '<div class="step-note" style="margin-top:12px"><b>Application timing:</b> '+ZAP.esc(x.timing||'')+'</div>'+
+        '<h4 class="micro" style="margin-top:16px">Culture signals</h4><div class="wow" style="margin-top:4px"><p>'+ZAP.esc(d.culture)+'</p></div>'+
+        '<h4 class="micro" style="margin-top:16px">Insider-style tips '+ZAP.indic('Indicative')+'</h4>'+tips+
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-salary">' +
+        '<h4 class="micro" style="margin-top:0">SALARY &amp; NEGOTIATION</h4>' +
+        '<h4 class="micro" style="margin-top:12px">What raises your band</h4>'+raises+
+        '<h4 class="micro" style="margin-top:12px">Negotiation note</h4><div class="rec-block" style="margin-top:4px"><div class="rb-body">'+ZAP.esc(d.neg)+'</div></div>'+
+        '<div style="margin-top:12px">' + negDos + '</div>' +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-trend">' +
+        '<h4 class="micro" style="margin-top:0">INTERVIEW TRENDS</h4>' +
+        '<h4 class="micro" style="margin-top:12px">Currently-asked questions (technical + HR)</h4>'+trendQ+
+        '<h4 class="micro" style="margin-top:12px">Recent shifts in what they test</h4><div class="risk" style="margin-top:4px"><div class="body">'+ZAP.esc(x.shift||'')+'</div></div>'+
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  return '<div class="role-report" style="border:0;padding:0;">'+
+    '<div style="display:flex;align-items:center;gap:12px;margin:0 0 10px"><span style="font-size:28px">'+d.ico+'</span><h2 class="sec" style="margin:0;border:0">'+ZAP.esc(cn)+'</h2><span class="tag tc">'+ZAP.esc(grpName)+'</span></div>'+
+    bento +
+    deepDive +
+    '</div>';
+}
+window.switchRoleTab=function(idx){
+  document.querySelectorAll('.role-panel').forEach(function(p,i){ p.classList.toggle('active',i===idx); });
+  document.querySelectorAll('.rsub').forEach(function(b,i){ b.classList.toggle('active',i===idx); });
+};
+window.switchSTab=function(btn,id){
+  var nav=btn.parentNode;
+  var content=nav.nextElementSibling;
+  nav.querySelectorAll('.s-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  content.querySelectorAll('.s-panel').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById(id); if(t) t.classList.add('active');
+};
+var RECS=[
+  {t:"Prepare to the company's specific pattern, not just generically",b:"Match your prep to their process and signature assessment. Confirm the current format on their official careers page."},
+  {t:"Build a genuine 'why this company' answer",b:"Tie one specific thing about the company to your own work or interest. Specific beats flattery."},
+  {t:"Verify every detail before relying on it",b:"Treat these profiles as a starting map. Cross-check with the official site and recent candidate experiences."}
+];
+
+/* ---- standard boot (identical across agents) ---- */
+(function(){
+  if(AGENT.info) ZAP.mountInfo('info', AGENT.info);
+  var s=AGENT.selector||{type:'roles',multi:true};
+  // chaining: restore role selection carried from a previous role-based agent
+  var restore=[];
+  if(s.type==='roles'){ var saved=ZAP.recall('roles'); if(saved&&saved.length){ restore=saved; ZAP.carryBanner('carryBanner', saved); } }
+  if(s.type==='roles') ZAP.mountRoles('roleGrid', {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel, restore:restore});
+  else ZAP.mountChips('roleGrid', s.items||[], {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel});
+  // prefill resume textarea if one exists and we have remembered resume text
+  var rt=document.getElementById('resumeText'); var savedResume=ZAP.recall('resume');
+  if(rt&&savedResume&&!rt.value) rt.value=savedResume;
+  // copt (Step 2) selection
+  document.addEventListener('click', function(e){
+    var o=e.target.closest && e.target.closest('.copt');
+    if(o){ var g=o.parentNode; g.querySelectorAll('.copt').forEach(function(x){x.classList.remove('active');}); o.classList.add('active'); }
+  });
+  window.optVal=function(id){ var e=document.querySelector('#'+id+' .copt.active'); return e?e.textContent.trim():''; };
+  function run(){
+    var sel=ZAP.selected('roleGrid');
+    if(!sel.length){ alert('Please select at least one '+(AGENT.unit||'role')+' first.'); return; }
+    // chaining: remember role selection + any resume text for the next agent
+    if(s.type==='roles'){ ZAP.remember('roles', sel); ZAP.remember('role', sel[0]); }
+    var rtx=document.getElementById('resumeText'); if(rtx&&rtx.value&&rtx.value.replace(/\s/g,'').length>40) ZAP.remember('resume', rtx.value);
+    ZAP.showReport();
+    AGENT.report(sel);
+    var dl=document.getElementById('dl-btn');
+    if(dl) dl.onclick=function(){ ZAP.download(AGENT.dlname||'zapit_report.txt', AGENT.dltext?AGENT.dltext(sel):JSON.stringify(sel)); };
+  }
+  document.getElementById('run-btn').addEventListener('click', run);
+})();
+</script>
+</body>
+</html>

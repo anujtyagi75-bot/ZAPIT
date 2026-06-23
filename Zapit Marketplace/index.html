@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ZAP IT — Career Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg-page:#000;--bg-base:#0a0a0a;--bg-subtle:#111;--bg-light:#1a1a1a;--bg-hover:#222;
+  --border:rgba(255,255,255,.08);--border-strong:rgba(255,255,255,.15);
+  --text-primary:#ededed;--text-body:#a1a1a1;--text-muted:#666;
+  --cyan:#00c2ff;--cyan-bg:rgba(0,194,255,.08);
+  --emerald:#00d97e;--emerald-bg:rgba(0,217,126,.08);
+  --amber:#f5a623;--amber-bg:rgba(245,166,35,.08);
+  --crimson:#ff4d4d;--crimson-bg:rgba(255,77,77,.08);
+  --violet:#a78bfa;--violet-bg:rgba(167,139,250,.08);
+  /* legacy aliases */
+  --navy:#0a0a0a;--navy-dark:#000;--slate:#a1a1a1;--slate-light:#666;
+  --bg-subtle:#111;--bg-light:#1a1a1a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',ui-sans-serif,system-ui,sans-serif;color:var(--text-primary);background:var(--bg-page);line-height:1.5;font-size:14px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;padding:0 24px;height:52px}
+.brand{font-weight:800;letter-spacing:-.02em;font-size:17px;color:#fff;text-decoration:none}
+.brand em{color:var(--cyan);font-style:normal}
+.topbar-right{display:flex;align-items:center;gap:6px}
+.tbtn{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);text-decoration:none;transition:color .15s,background .15s;border:1px solid transparent;background:none}
+.tbtn:hover{color:var(--text-primary);background:var(--bg-hover)}
+.tbtn.active{background:var(--bg-light);color:var(--text-primary);border-color:var(--border-strong)}
+.wrap{max-width:1080px;margin:24px auto 60px;background:var(--bg-base);border-radius:12px;border:1px solid var(--border);overflow:hidden}
+/* shared component stubs (unused on index but kept for consistency) */
+.acc-item{border:1px solid var(--border);border-radius:8px;margin:6px 0;overflow:hidden}
+.acc-hdr{padding:12px 16px;background:var(--bg-subtle);cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:13px;color:var(--text-primary);user-select:none}
+.acc-hdr:hover{background:var(--bg-hover)}
+.acc-body{display:none;padding:14px 16px;font-size:13px;color:var(--text-body);line-height:1.6;border-top:1px solid var(--border)}
+.acc-body.open{display:block}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.tc{background:var(--cyan-bg);color:var(--cyan);border:1px solid rgba(0,194,255,.2)}
+.tg{background:var(--emerald-bg);color:var(--emerald);border:1px solid rgba(0,217,126,.2)}
+.ta{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.trd{background:var(--crimson-bg);color:var(--crimson);border:1px solid rgba(255,77,77,.2)}
+.tv{background:var(--violet-bg);color:var(--violet);border:1px solid rgba(167,139,250,.2)}
+@media(max-width:860px){.wrap{margin:12px;border-radius:10px}}
+</style>
+<style>
+/* ── Hero ───────────────────────────────────────────── */
+.hero{
+  background:var(--bg-base);
+  padding:64px 48px 48px;
+  color:#fff;
+  border-bottom:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 80% at 60% -10%, rgba(0,194,255,.07) 0%, transparent 65%),
+             radial-gradient(ellipse 40% 50% at 100% 80%, rgba(167,139,250,.04) 0%, transparent 60%);
+  pointer-events:none;
+}
+.hero .ey{
+  color:var(--cyan);font-weight:700;font-size:10px;
+  letter-spacing:.18em;text-transform:uppercase;margin-bottom:16px;
+  font-family:'JetBrains Mono',monospace;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.hero .ey::before{content:'';display:inline-block;width:20px;height:1px;background:var(--cyan)}
+.hero h1{font-size:42px;font-weight:800;line-height:1.06;letter-spacing:-.035em;margin-bottom:14px;max-width:580px}
+.hero h1 em{color:var(--cyan);font-style:normal}
+.hero p{color:var(--text-muted);font-size:14px;max-width:520px;line-height:1.7}
+.stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border-top:1px solid var(--border);margin-top:36px;
+}
+.stat{padding:20px 0;border-right:1px solid var(--border)}
+.stat:last-child{border-right:0}
+.stat b{font-size:24px;font-weight:800;display:block;color:#fff;letter-spacing:-.03em}
+.stat span{font-size:10px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-top:4px;display:block}
+/* ── Journey strip ──────────────────────────────────── */
+.journey-section{
+  padding:24px 48px;
+  background:var(--bg-subtle);
+  border-bottom:1px solid var(--border);
+}
+.journey-label{
+  font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--text-muted);
+  text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;
+  font-family:'JetBrains Mono',monospace;
+}
+.journey-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.journey-strip{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border:1px solid var(--border);border-radius:10px;overflow:hidden;
+}
+.j-phase{
+  padding:18px 20px;border-right:1px solid var(--border);
+  position:relative;cursor:default;transition:background .15s;
+  background:var(--bg-base);
+}
+.j-phase:last-child{border-right:0}
+.j-phase:hover{background:var(--bg-hover)}
+.j-phase .jp-num{
+  font-size:9px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;margin-bottom:8px;
+  font-family:'JetBrains Mono',monospace;
+}
+.j-phase .jp-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;letter-spacing:-.01em}
+.j-phase .jp-agents{font-size:11px;color:var(--text-muted);line-height:1.6}
+.j-phase.p1{border-top:2px solid var(--cyan)}.j-phase.p1 .jp-num{color:var(--cyan)}
+.j-phase.p2{border-top:2px solid var(--violet)}.j-phase.p2 .jp-num{color:var(--violet)}
+.j-phase.p3{border-top:2px solid var(--emerald)}.j-phase.p3 .jp-num{color:var(--emerald)}
+.j-phase.p4{border-top:2px solid var(--amber)}.j-phase.p4 .jp-num{color:var(--amber)}
+.j-phase .jp-count{
+  display:inline-block;margin-top:10px;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:20px;font-family:'JetBrains Mono',monospace;
+}
+.j-phase.p1 .jp-count{background:var(--cyan-bg);color:var(--cyan);border:1px solid rgba(0,194,255,.2)}
+.j-phase.p2 .jp-count{background:var(--violet-bg);color:var(--violet);border:1px solid rgba(167,139,250,.2)}
+.j-phase.p3 .jp-count{background:var(--emerald-bg);color:var(--emerald);border:1px solid rgba(0,217,126,.2)}
+.j-phase.p4 .jp-count{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+/* ── Filter bar ─────────────────────────────────────── */
+.filter-bar{
+  padding:12px 48px;border-bottom:1px solid var(--border);
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  background:var(--bg-base);
+}
+.filter-bar-label{
+  font-size:9px;font-weight:700;letter-spacing:.12em;color:var(--text-muted);
+  text-transform:uppercase;margin-right:4px;flex-shrink:0;
+  font-family:'JetBrains Mono',monospace;
+}
+.fbtn{
+  padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;
+  border:1px solid var(--border-strong);background:transparent;
+  color:var(--text-muted);cursor:pointer;transition:all .12s;font-family:inherit;
+}
+.fbtn:hover{border-color:var(--cyan);color:var(--cyan)}
+.fbtn.active{background:var(--cyan);border-color:var(--cyan);color:#000;font-weight:700}
+.filter-bar .start-cta{
+  margin-left:auto;font-size:12px;font-weight:700;color:#000;
+  text-decoration:none;display:flex;align-items:center;gap:6px;
+  padding:7px 18px;border-radius:999px;transition:all .15s;
+  background:#fff;border:1px solid #fff;
+}
+.filter-bar .start-cta:hover{background:#ededed}
+/* ── Agent grid ─────────────────────────────────────── */
+.grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:16px;padding:24px;
+  background:var(--bg-base);
+}
+.card{
+  background:var(--bg-subtle);padding:24px;
+  text-decoration:none;color:inherit;
+  transition:all .15s;position:relative;display:block;
+  border:1px solid var(--border);
+  border-radius:10px;
+}
+.card:hover{background:var(--bg-light);border-color:var(--border-strong)}
+.card .card-tags{
+  position:absolute;top:16px;right:16px;
+  display:flex;gap:6px;align-items:center;
+}
+.card .step-chip{
+  background:var(--bg-light);border:1px solid var(--border);
+  border-radius:4px;padding:2px 8px;font-size:9px;font-weight:700;
+  color:var(--text-muted);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;
+}
+.card .ico{
+  width:40px;height:40px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin-bottom:14px;
+  border:1px solid var(--border);
+}
+.card .nm{font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;padding-right:52px;line-height:1.35;letter-spacing:-.01em}
+.card .ds-list{
+  font-size:12px;color:var(--text-body);line-height:1.55;
+  margin-bottom:14px;padding-left:12px;list-style:none;
+}
+.card .ds-list li{
+  margin-bottom:6px;position:relative;
+}
+.card .ds-list li::before{
+  content:"•";position:absolute;left:-12px;top:0;
+  color:var(--cyan);font-weight:700;
+}
+.card .ds-list li:last-child{margin-bottom:0}
+.card .pb{
+  font-size:11px;padding:5px 10px;border-radius:4px;
+  background:var(--crimson-bg);color:var(--crimson);
+  border:1px solid rgba(255,77,77,.15);
+  margin-bottom:12px;line-height:1.5;
+}
+.card .pb::before{content:"Fixes: ";font-weight:700}
+.card .foot{display:flex;align-items:center;justify-content:flex-end;margin-top:12px}
+.card .cta{
+  font-size:11px;font-weight:700;color:var(--text-body);
+  background:var(--bg-light);border:1px solid var(--border-strong);
+  padding:6px 14px;border-radius:6px;transition:all .15s;
+  letter-spacing:.02em;
+}
+.card:hover .cta{color:#000;background:var(--cyan);border-color:var(--cyan)}
+.card.start-card{background:rgba(0,194,255,.04);border:1px solid rgba(0,194,255,.25)}
+.card.start-card:hover{background:rgba(0,194,255,.08);border-color:var(--cyan)}
+.card.start-card .step-chip{background:var(--cyan);color:#000;border-color:var(--cyan)}
+.card.start-card .cta{background:var(--cyan-bg);border-color:rgba(0,194,255,.2);color:var(--cyan)}
+.card.start-card:hover .cta{color:#000;background:var(--cyan);border-color:var(--cyan)}
+.badge{
+  display:inline-block;padding:2px 8px;border-radius:20px;
+  font-size:9px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;font-family:'JetBrains Mono',monospace;
+}
+@media(max-width:860px){
+  .grid{grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+  .hero{padding:36px 20px}
+  .hero h1{font-size:28px}
+  .stats{grid-template-columns:1fr 1fr}
+  .filter-bar{padding:12px 20px}
+  .journey-section{padding:18px 20px}
+  .journey-strip{grid-template-columns:1fr 1fr}
+}
+@media(max-width:540px){
+  .grid{grid-template-columns:1fr;gap:10px;padding:12px}
+  .stats{grid-template-columns:1fr 1fr}
+  .journey-strip{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="topbar"><a href="index.html" class="brand">ZAP<em>IT</em></a></div>
+<div class="wrap">
+<div class="hero">
+  <div class="ey">India's Career Intelligence Platform · Tech Students &amp; Fresh Graduates</div>
+  <h1>11 AI Agents.<br><em>No guesswork.</em> One clear path.</h1>
+  <p>Each agent decodes a specific layer of India's tech hiring market — from understanding what the market wants, to building the right skills, crafting your profile, and landing the job. Start with Agent 01 and follow the path.</p>
+  <div class="stats">
+    <div class="stat"><b>11</b><span>Agents</span></div>
+    <div class="stat"><b>18+</b><span>Roles Covered</span></div>
+    <div class="stat"><b>12</b><span>Domains</span></div>
+  </div>
+</div>
+<div class="journey-section">
+  <div class="journey-label"><span style="color:var(--cyan);margin-right:6px">Not sure where to start?</span> Your path to a tech job — follow these phases in order</div>
+  <div class="journey-strip">
+    <div class="j-phase p1">
+      <div class="jp-num">Phase 1 · Understand the Market</div>
+      <div class="jp-title">Know Before You Build</div>
+      <div class="jp-agents">Decode what the market pays, which roles are hiring, and exactly which skills move the needle — before investing a single hour of study time.</div>
+      <span class="jp-count">Agents 01 – 02</span>
+    </div>
+    <div class="j-phase p2">
+      <div class="jp-num">Phase 2 · Build a Targeted Profile</div>
+      <div class="jp-title">Skills, Certs &amp; Your Resume</div>
+      <div class="jp-agents">Get the right roadmap for your role, fill domain knowledge gaps, make your resume ATS-proof, and signal AI readiness to modern screeners.</div>
+      <span class="jp-count">Agents 03 – 06</span>
+    </div>
+    <div class="j-phase p3">
+      <div class="jp-num">Phase 3 · Get Interview-Ready</div>
+      <div class="jp-title">Practice &amp; Platform Skills</div>
+      <div class="jp-agents">Master role-specific interview questions, add verifiable platform skills to your CV, and build real projects you can demonstrate in any screening call.</div>
+      <span class="jp-count">Agents 07 – 09</span>
+    </div>
+    <div class="j-phase p4">
+      <div class="jp-num">Phase 4 · Target &amp; Apply</div>
+      <div class="jp-title">Company Intel &amp; Checklists</div>
+      <div class="jp-agents">Walk into interviews with company-specific intelligence, negotiation data, and a simple tick-off checklist so nothing falls through the cracks.</div>
+      <span class="jp-count">Agents 10 – 11</span>
+    </div>
+  </div>
+</div>
+<div class="filter-bar">
+  <span class="filter-bar-label">Filter:</span>
+  <button class="fbtn active" onclick="filter('all',this)">All Agents</button>
+  <button class="fbtn" onclick="filter('market',this)">📈 Market Intel</button>
+  <button class="fbtn" onclick="filter('profile',this)">👤 Profile</button>
+  <button class="fbtn" onclick="filter('readiness',this)">⚡ Readiness</button>
+  <button class="fbtn" onclick="filter('action',this)">🚀 Action</button>
+  <a href="01_market.html" class="start-cta">▶ Start with Agent 01</a>
+</div>
+<div class="grid" id="grid"></div>
+</div>
+<script>
+const A=[
+  {
+    n: 1,
+    ico: "📊",
+    nm: "Market Demand Intelligence",
+    ds: [
+      "7 market reads: hot-skills demand, hiring pulse, and heatmap",
+      "Salary benchmarks & 6-month forecasts for all 18 roles",
+      "Skill-ROI check to see if learning a tool/language is worth it"
+    ],
+    pb: "students prepare for the wrong market and the wrong salary band",
+    cat: "market",
+    bg: "var(--cyan-bg)",
+    badge: "START HERE",
+    bc: "background:var(--cyan-bg);color:var(--cyan)",
+    file: "01_market.html"
+  },
+  {
+    n: 2,
+    ico: "🗺️",
+    nm: "Role Skill Matrix",
+    ds: [
+      "The exact path per role: must-have vs. nice-to-have skills",
+      "The software, packages, and tools you'll use day-to-day",
+      "Recommended training & credentials rated by hiring signal"
+    ],
+    pb: "students invest time in wrong skills in the wrong order",
+    cat: "market",
+    bg: "var(--violet-bg)",
+    badge: "SKILL MAP",
+    bc: "background:var(--violet-bg);color:var(--violet)",
+    file: "02_matrix.html"
+  },
+  {
+    n: 3,
+    ico: "🧭",
+    nm: "Career Roadmaps",
+    ds: [
+      "Ready-to-use 30/60/90-day step-by-step career path guides",
+      "Milestones for foundation, building, and job-ready phases",
+      "Targeted project recommendations and portfolio check gates"
+    ],
+    pb: "good plans fall apart from week 3 — wrong milestones and no deployment gates",
+    cat: "action",
+    bg: "var(--emerald-bg)",
+    badge: "ROADMAPS",
+    bc: "background:var(--emerald-bg);color:var(--emerald)",
+    file: "03_roadmap.html"
+  },
+  {
+    n: 4,
+    ico: "🏭",
+    nm: "Domain Readiness",
+    ds: [
+      "Packs for FinTech, HealthTech, SaaS, EdTech, E-commerce, Logistics",
+      "Industry-specific vocabulary, standards, and process maps",
+      "Crucial domain speaking points to clear business rounds"
+    ],
+    pb: "tech skills pass but missing domain context fails culture-fit rounds",
+    cat: "readiness",
+    bg: "var(--amber-bg)",
+    badge: "DOMAIN",
+    bc: "background:var(--amber-bg);color:var(--amber)",
+    file: "04_domain.html"
+  },
+  {
+    n: 5,
+    ico: "📄",
+    nm: "Resume Download Kits",
+    ds: [
+      "6-parameter scans: ATS, keywords, AI, evidence, and metrics",
+      "Fillable profiles: ATS resume templates & GitHub README models",
+      "Actionable before/after resume bullet rewriting worksheets"
+    ],
+    pb: "75% of resumes are rejected by ATS before a human sees them",
+    cat: "profile",
+    bg: "var(--crimson-bg)",
+    badge: "RESUME KIT",
+    bc: "background:var(--crimson-bg);color:var(--crimson)",
+    file: "05_resumekit.html"
+  },
+  {
+    n: 6,
+    ico: "🤖",
+    nm: "AI Readiness Kits",
+    ds: [
+      "Full audit of AI tools, prompting basics, and setup in your profile",
+      "Comparison against top criteria that modern screeners look for",
+      "Curated learning materials & free certifications to fill gaps"
+    ],
+    pb: "students don't know if their profile is AI-ready or what to add",
+    cat: "readiness",
+    bg: "var(--emerald-bg)",
+    badge: "AI READY",
+    bc: "background:var(--emerald-bg);color:var(--emerald)",
+    file: "06_aireadiness.html"
+  },
+  {
+    n: 7,
+    ico: "🎤",
+    nm: "Interview Readiness Pocket Book",
+    ds: [
+      "Role pocket books + complete HR interview prep bank",
+      "Quick Snapshot (day-before mode) and core technical Q&As",
+      "Mock interview prompts, setup checklists, and pitfalls to avoid"
+    ],
+    pb: "failing interviews despite preparation — wrong strategy, can't explain own code",
+    cat: "readiness",
+    bg: "var(--cyan-bg)",
+    badge: "INTERVIEW",
+    bc: "background:var(--cyan-bg);color:var(--cyan)",
+    file: "07_interview.html"
+  },
+  {
+    n: 8,
+    ico: "🚀",
+    nm: "Platform 10X Job Booster",
+    ds: [
+      "30-minute quick modules: theory + quiz + practical lab steps",
+      "Covers Shopify, HubSpot, Salesforce, AEM, SAP, ServiceNow",
+      "Add high-demand platforms to your CV with real confidence"
+    ],
+    pb: "students list platform skills they can't explain in a screening call",
+    cat: "action",
+    bg: "var(--amber-bg)",
+    badge: "PLATFORMS",
+    bc: "background:var(--amber-bg);color:var(--amber)",
+    file: "08_booster.html"
+  },
+  {
+    n: 9,
+    ico: "💻",
+    nm: "VEP — Virtual Experience Platform",
+    ds: [
+      "100+ simulated developer and analyst project challenges",
+      "Actionable: clear brief, tech stack, and setup guides",
+      "GitHub README templates to showcase hands-on coding work"
+    ],
+    pb: "no hands-on evidence — the #1 rejection reason at every hiring tier",
+    cat: "action",
+    bg: "var(--violet-bg)",
+    badge: "★ BUILD",
+    bc: "background:var(--violet-bg);color:var(--violet)",
+    file: "09_vep.html"
+  },
+  {
+    n: 10,
+    ico: "🏢",
+    nm: "Industry-Specific Prep Kit",
+    ds: [
+      "Company intel categorized by service, consulting, and product",
+      "Exam patterns (TCS NQT, Coforge, Zoho) and interview pipelines",
+      "Critical salary negotiation data and company snapshots"
+    ],
+    pb: "going into a company interview without company-specific intelligence",
+    cat: "action",
+    bg: "var(--cyan-bg)",
+    badge: "PREP KIT",
+    bc: "background:var(--cyan-bg);color:var(--cyan)",
+    file: "10_industrykit.html"
+  },
+  {
+    n: 11,
+    ico: "🧾",
+    nm: "Cheatsheets & Checklists",
+    ds: [
+      "Simple checklists: Get a Job in 60 Days, ATS Resume Fix",
+      "Quick guides: 0-to-Offer, Switch to Tech, and Double Your Salary",
+      "Compact cheat sheets: AI/Prompting basics, Fullstack maps"
+    ],
+    pb: "big goals feel overwhelming without a simple, step-by-step action plan",
+    cat: "action",
+    bg: "var(--amber-bg)",
+    badge: "CHEATSHEETS",
+    bc: "background:var(--amber-bg);color:var(--amber)",
+    file: "11_cheatsheets.html"
+  }
+];
+let cur='all';
+function render(){
+  const list=cur==='all'?A:A.filter(a=>a.cat===cur);
+  document.getElementById('grid').innerHTML=list.map(a=>`
+    <a href="${a.file}" class="card${a.n===1?' start-card':''}">
+      <div class="ico" style="background:${a.bg}">${a.ico}</div>
+      <div class="card-tags">
+        <span class="badge" style="${a.bc}">${a.badge}</span>
+        <div class="step-chip">AGENT ${String(a.n).padStart(2,'0')}</div>
+      </div>
+      <div class="nm">${a.nm}</div>
+      <ul class="ds-list">
+        ${a.ds.map(bullet => `<li>${bullet}</li>`).join('')}
+      </ul>
+      <div class="pb">${a.pb}</div>
+      <div class="foot"><span class="cta">Open Agent &rarr;</span></div>
+    </a>`).join('');
+}
+function filter(cat,btn){cur=cat;document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
+render();
+</script>
+</body>
+</html>

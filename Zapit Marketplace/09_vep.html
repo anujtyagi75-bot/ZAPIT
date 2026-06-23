@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>VEP — Virtual Experience Platform — ZAP IT</title>
+<link rel="stylesheet" href="_shared.css">
+<style>.role-report{border:2px solid var(--border);border-top:4px solid var(--cyan);border-radius:8px;padding:24px;margin:16px 0}.tab-wrap{margin-top:4px}</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="brand">ZAP<em>IT</em></a>
+  <div class="topbar-right"><a href="index.html" class="tbtn">← All Agents</a></div>
+</div>
+<div class="wrap">
+  <div class="agent-hdr">
+    <div class="step-tag">AGENT 09 · BUILD</div>
+    <div class="title-row"><div class="agent-ico">&#128187;</div><div><h1>VEP — Virtual Experience Platform</h1></div></div>
+    <div class="agent-desc">100+ project simulations across 18 roles. Minimal theory, maximum doing — brief, stack and where to build each. Ship to GitHub.</div>
+  </div>
+  <div class="agent-info" id="info"></div>
+  <div class="config-panel">
+    <div class="config-panel-title"><span>&#9881;</span> Step 1 — Select Role(s) <span class="rolecount" data-rolecount style="margin-left:8px">none selected</span></div>
+    <div class="step-note">Pick one or more roles, or “All Roles”, to load their project simulations.</div>
+    <div id="carryBanner"></div>
+    <div class="role-grid" id="roleGrid"></div>
+    
+    <button class="run-btn" id="run-btn">&#9889; Load Simulations</button>
+    <div class="run-note">Runs fully offline — no API key, no internet.</div>
+  </div>
+  <div class="report-wrap" id="report-wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      <button class="dl-btn" id="dl-btn">&#11015; Download (.txt)</button>
+      <button class="nfbtn" onclick="window.print()">&#128424; Print</button>
+    </div>
+    <div id="reports-container"></div>
+  </div>
+  <div class="nav-footer">
+    <a class="nfbtn" href="index.html">← All Agents</a>
+    <a class="nfbtn primary" href="10_industrykit.html">Next: Industry Prep Kit &rarr;</a>
+  </div>
+</div>
+<script src="_engine.js"></script>
+<script src="_skills.js"></script>
+<script>
+/* Agent 11 — VEP. 100+ project simulations across roles (generated from skills). */
+var SIM_TPL=[
+  function(s,m){return {t:"Starter build: "+s.primary[0].n,brief:"Build a small but complete project that centres on "+s.primary[0].n+". Keep scope tiny; finish it.",stack:s.primary.slice(0,2).map(n=>n.n).join(", ")};},
+  function(s,m){return {t:s.primary[1]?(s.primary[1].n+" feature project"):"Second feature project",brief:"Add a real feature using "+(s.primary[1]?s.primary[1].n:s.primary[0].n)+". Treat it like a ticket: clear done-criteria.",stack:(s.primary[1]?s.primary[1].n:s.primary[0].n)+", "+(s.tools[0]?s.tools[0].n:"Git")};},
+  function(s,m){return {t:"Integration challenge",brief:"Combine two skills end-to-end ("+s.primary[0].n+" + "+(s.secondary[0]?s.secondary[0].n:s.tech[0].n)+"). This is where real learning happens.",stack:s.primary[0].n+" + "+(s.secondary[0]?s.secondary[0].n:s.tech[0].n)};},
+  function(s,m){return {t:"Deploy & document",brief:"Take any project above live and write a clean README with screenshots. A project isn't done until it's deployed.",stack:(s.tools.find(t=>/vercel|render|docker|store|cloud/i.test(t.n))||s.tools[0]||{n:"Git"}).n};},
+  function(s,m){return {t:"Domain-flavoured capstone",brief:"Build a capstone inspired by real products: "+(m&&m.examples?m.examples:"a real-world scenario")+". Pick one slice and ship it.",stack:s.primary.slice(0,3).map(n=>n.n).join(", ")};},
+  function(s,m){return {t:"Polish & portfolio",brief:"Refactor your best project to clean code, add tests/types where relevant, and pin it on GitHub for recruiters.",stack:(s.secondary.find(t=>/test/i.test(t.n))||{n:"clean code"}).n};}
+];
+var AGENT={
+  unit:'role', dlname:'zapit_vep.txt',
+  info:{
+    what:"A Virtual Experience Platform: 100+ project simulations across all 18 roles. Minimal theory, maximum doing — each simulation gives a brief, a stack and where to build it.",
+    why:"No hands-on evidence is the #1 rejection reason at every tier. Do these, ship to GitHub, and you can honestly say 'I've built this'.",
+    features:["~6 project simulations per role","Brief + stack + where to build, each","Deploy + README guidance built in","Ship to GitHub and add to your CV","Pick one role or several"],
+    examples:["Frontend: build → add feature → integrate → deploy → capstone → polish","Each sim is ticket-sized — finishable in days, not months","Output is real GitHub projects, not certificates"]
+  },
+  selector:{type:'roles',multi:true,allLabel:'All Roles'},
+  report:function(roles){
+    var c=document.getElementById('reports-container');
+    var html='<div class="step-note">Build book(s) for '+roles.map(function(r){return ZAP.esc(r);}).join(', ')+' &nbsp; '+ZAP.indic('Indicative briefs')+'</div>';
+    
+    html+='<div class="report-panel" id="rpanel-role">';
+    if(roles.length===1){
+      html+=renderVEP(roles[0]);
+    } else {
+      html+='<div class="report-sub-tabs">';
+      roles.forEach(function(rn,i){
+        html+='<button class="rsub'+(i===0?' active':'')+'" onclick="switchRoleTab('+i+')">'+ZAP.esc(rn)+'</button>';
+      });
+      html+='</div>';
+      roles.forEach(function(rn,i){
+        html+='<div class="role-panel'+(i===0?' active':'')+'" id="rp-'+i+'">';
+        html+=renderVEP(rn);
+        html+='</div>';
+      });
+    }
+    html+='</div>';
+    
+    html+=ZAP.closeout(RECS, {href:'05_resumekit.html',label:'Agent 05 · Resume Kit',desc:'Built a few projects? Showcase them — CV bullets, GitHub README and LinkedIn. Your role carries over.'}, ['Finish <b>2–3 small sims</b> — shipped beats big-and-abandoned.','<b>Deploy + README</b> turns a sim into evidence a recruiter can click.','<b>Pin your best 2–3</b> on GitHub so they\'re seen first.']);
+    c.innerHTML=html;
+  }
+};
+function renderVEP(rn){
+  var s=ZAP.SKILLS[rn], m=ZAP.MARKET[rn]; if(!s) return '';
+  var sims=SIM_TPL.map(function(f){return f(s,m);});
+  var cards=sims.map(function(p,i){
+    return '<div class="acc-item"><div class="acc-hdr">📄 Sim '+(i+1)+': '+ZAP.esc(p.t)+'<span class="acc-ico">v</span></div><div class="acc-body"><p>'+ZAP.esc(p.brief)+'</p>'+
+      '<p style="margin-top:6px"><span class="tag tc">STACK</span> '+ZAP.esc(p.stack)+'</p>'+
+      '<p style="margin-top:4px"><span class="tag tv">BUILD ON</span> GitHub repo → deploy live → add URL to CV</p>'+
+      '<p style="margin-top:4px"><span class="tag tg">README</span> Problem → What you built → Stack → Live link → Screenshots</p></div></div>';
+  }).join('');
+
+  var verdict = '<div class="verdict-col">' +
+    '<div class="verdict-hero vh-green">' +
+      '<div class="vh-lbl">PORTFOLIO STATUS</div>' +
+      '<div class="vh-val">' + ZAP.esc(rn) + '</div>' +
+      '<div class="vh-sub">VEP Virtual Experience Platform</div>' +
+    '</div>' +
+  '</div>';
+  
+  var kpis = ZAP.kpiRow([
+    {lbl:'TOTAL SIMULATIONS', val:sims.length+' Sims', sub:'ticket-sized scope', cls:'demand'},
+    {lbl:'TARGET COMPLETED', val:'2-3 shipped', sub:'deployed, not local', cls:'pos'},
+    {lbl:'VERIFIABLE PROOF', val:'GitHub Link', sub:'recruiter check', cls:'trend'},
+    {lbl:'BUILD TYPE', val:'Hands-on', sub:'code evidence', cls:'violet'}
+  ]);
+  
+  var outcome = '<div class="sample-resume" style="margin:0"><h5>OUTCOME GOAL</h5>"Finish 2–3 of these, deploy them, and you have real evidence — the single biggest fix for fresher rejections."</div>';
+  var bento = '<div class="bento-snapshot">' + verdict + '<div class="data-col">' + kpis + outcome + '</div></div>';
+
+  var id = rn.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
+  var deepDive = '<div class="deep-dive">' +
+    '<aside class="sidebar-nav">' +
+      '<button class="s-tab active" onclick="switchSTab(this, \''+id+'-sims\')">📄 Project Simulations</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-outcomes\')">🎓 Project Outcomes</button>' +
+    '</aside>' +
+    '<div class="sidebar-content">' +
+      '<div class="s-panel active" id="'+id+'-sims">' +
+        '<h4 class="micro" style="margin-top:0">PROJECT SIMULATIONS</h4>' +
+        '<p style="font-size:12px;color:var(--slate-light);margin-bottom:10px">Build projects like: '+ZAP.esc(m?m.examples:'')+'</p>'+
+        cards +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-outcomes">' +
+        '<h4 class="micro" style="margin-top:0">PROJECT OUTCOMES</h4>' +
+        '<div class="success-box" style="margin-top:0"><p>Finish 2–3 of these, deploy them, and you have real evidence — the single biggest fix for fresher rejections.</p></div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  return '<div class="role-report" style="border:0;padding:0;">'+
+    '<h2 class="sec" style="margin:16px 0 10px">'+ZAP.esc(rn)+' → Portfolio Kit</h2>'+
+    bento +
+    deepDive +
+    '</div>';
+}
+window.switchRoleTab=function(idx){
+  document.querySelectorAll('.role-panel').forEach(function(p,i){ p.classList.toggle('active',i===idx); });
+  document.querySelectorAll('.rsub').forEach(function(b,i){ b.classList.toggle('active',i===idx); });
+};
+window.switchSTab=function(btn,id){
+  var nav=btn.parentNode;
+  var content=nav.nextElementSibling;
+  nav.querySelectorAll('.s-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  content.querySelectorAll('.s-panel').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById(id); if(t) t.classList.add('active');
+};
+var RECS=[
+  {t:"Pick 2–3 simulations and finish them — small and shipped beats big and abandoned",b:"Ticket-sized scope is the point. Completing and deploying a small project is worth more than a grand unfinished one."},
+  {t:"Deploy every sim and write the README",b:"Live link + clear README turns a sim into verifiable evidence a recruiter can click."},
+  {t:"Pin your best 2–3 on GitHub",b:"Curate. Recruiters skim — make your strongest, deployed projects the first thing they see."}
+];
+
+/* ---- standard boot (identical across agents) ---- */
+(function(){
+  if(AGENT.info) ZAP.mountInfo('info', AGENT.info);
+  var s=AGENT.selector||{type:'roles',multi:true};
+  // chaining: restore role selection carried from a previous role-based agent
+  var restore=[];
+  if(s.type==='roles'){ var saved=ZAP.recall('roles'); if(saved&&saved.length){ restore=saved; ZAP.carryBanner('carryBanner', saved); } }
+  if(s.type==='roles') ZAP.mountRoles('roleGrid', {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel, restore:restore});
+  else ZAP.mountChips('roleGrid', s.items||[], {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel});
+  // prefill resume textarea if one exists and we have remembered resume text
+  var rt=document.getElementById('resumeText'); var savedResume=ZAP.recall('resume');
+  if(rt&&savedResume&&!rt.value) rt.value=savedResume;
+  // copt (Step 2) selection
+  document.addEventListener('click', function(e){
+    var o=e.target.closest && e.target.closest('.copt');
+    if(o){ var g=o.parentNode; g.querySelectorAll('.copt').forEach(function(x){x.classList.remove('active');}); o.classList.add('active'); }
+  });
+  window.optVal=function(id){ var e=document.querySelector('#'+id+' .copt.active'); return e?e.textContent.trim():''; };
+  function run(){
+    var sel=ZAP.selected('roleGrid');
+    if(!sel.length){ alert('Please select at least one '+(AGENT.unit||'role')+' first.'); return; }
+    // chaining: remember role selection + any resume text for the next agent
+    if(s.type==='roles'){ ZAP.remember('roles', sel); ZAP.remember('role', sel[0]); }
+    var rtx=document.getElementById('resumeText'); if(rtx&&rtx.value&&rtx.value.replace(/\s/g,'').length>40) ZAP.remember('resume', rtx.value);
+    ZAP.showReport();
+    AGENT.report(sel);
+    var dl=document.getElementById('dl-btn');
+    if(dl) dl.onclick=function(){ ZAP.download(AGENT.dlname||'zapit_report.txt', AGENT.dltext?AGENT.dltext(sel):JSON.stringify(sel)); };
+  }
+  document.getElementById('run-btn').addEventListener('click', run);
+})();
+</script>
+</body>
+</html>

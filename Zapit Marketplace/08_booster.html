@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Platform 10X Booster — ZAP IT</title>
+<link rel="stylesheet" href="_shared.css">
+<style>.role-report{border:2px solid var(--border);border-top:4px solid var(--cyan);border-radius:8px;padding:24px;margin:16px 0}.tab-wrap{margin-top:4px}</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="brand">ZAP<em>IT</em></a>
+  <div class="topbar-right"><a href="index.html" class="tbtn">← All Agents</a></div>
+</div>
+<div class="wrap">
+  <div class="agent-hdr">
+    <div class="step-tag">AGENT 08 · PLATFORMS</div>
+    <div class="title-row"><div class="agent-ico">&#128640;</div><div><h1>Platform 10X Booster — Quick Learn</h1></div></div>
+    <div class="agent-desc">~30-min theory + quiz + simulation for enterprise platforms — so you can genuinely say you know Shopify, HubSpot, Salesforce, AEM, SAP or ServiceNow.</div>
+  </div>
+  <div class="agent-info" id="info"></div>
+  <div class="config-panel">
+    <div class="config-panel-title"><span>&#9881;</span> Step 1 — Select Platform(s) <span class="rolecount" data-rolecount style="margin-left:8px">none selected</span></div>
+    <div class="step-note">Pick one or more platforms, or “All Platforms”.</div>
+    <div id="carryBanner"></div>
+    <div class="role-grid" id="roleGrid"></div>
+    
+    <button class="run-btn" id="run-btn">&#9889; Start Quick-Learn</button>
+    <div class="run-note">Runs fully offline — no API key, no internet.</div>
+  </div>
+  <div class="report-wrap" id="report-wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      <button class="dl-btn" id="dl-btn">&#11015; Download (.txt)</button>
+      <button class="nfbtn" onclick="window.print()">&#128424; Print</button>
+    </div>
+    <div id="reports-container"></div>
+  </div>
+  <div class="nav-footer">
+    <a class="nfbtn" href="index.html">← All Agents</a>
+    <a class="nfbtn primary" href="09_vep.html">Next: VEP &rarr;</a>
+  </div>
+</div>
+<script src="_engine.js"></script>
+<script src="_skills.js"></script>
+<script>
+/* Agent 10 — Platform 10X Booster. Quick-learn enterprise platforms. */
+var PLAT={
+"Shopify":{ico:"•",what:"The leading hosted e-commerce platform — stores, checkout, apps, themes.",who:"D2C brands, agencies, e-commerce teams",concepts:["Store anatomy: products, collections, variants","Themes + Liquid templating basics","Checkout & payments flow","Apps & the App Store ecosystem","Admin vs storefront"],quiz:[{q:"What language are Shopify themes built with?",o:[["Liquid",1,"Liquid is Shopify's templating language."],["PHP",0,"That's other CMSs."],["Python",0,"No."]]},{q:"A 'variant' in Shopify is&",o:[["A version of a product (size/colour)",1,"Exactly — e.g. T-shirt / Red / L."],["A discount code",0,"That's a price rule."],["A theme",0,"No."]]}],sims:["Set up a dev store (free) and add 3 products with variants","Install and configure one app","Edit a theme section with Liquid"],cv:"Set up and customised a Shopify store (products, variants, theme, one app)."},
+"HubSpot":{ico:"•",what:"A CRM + marketing/sales/service platform popular with B2B teams.",who:"Marketing, sales ops, RevOps",concepts:["CRM objects: contacts, companies, deals","Marketing: forms, emails, workflows","Sales pipeline & deal stages","Lists & segmentation","Reporting dashboards"],quiz:[{q:"In HubSpot, a 'deal' moves through&",o:[["Pipeline stages",1,"Deals progress through pipeline stages."],["Themes",0,"No."],["Liquid",0,"Wrong platform."]]},{q:"A workflow in HubSpot is&",o:[["An automation (triggers + actions)",1,"Yes — automate emails, tasks, etc."],["A report",0,"No."],["A contact",0,"No."]]}],sims:["Create a free HubSpot account and add contacts + a deal pipeline","Build a simple form → email workflow","Make a dashboard with 2 reports"],cv:"Configured a HubSpot CRM with pipeline, a form-to-email workflow and dashboards."},
+"Salesforce":{ico:"",what:"The dominant enterprise CRM + low-code platform.",who:"Sales, service, admins, developers",concepts:["Objects, fields, records","Standard vs custom objects","Flows (automation)","Reports & dashboards","Profiles & permissions"],quiz:[{q:"A custom object in Salesforce lets you&",o:[["Store data unique to your business",1,"Yes — beyond standard objects."],["Style a webpage",0,"No."],["Send a tweet",0,"No."]]},{q:"Salesforce 'Flows' are for&",o:[["Automation without code",1,"Low-code automation."],["3D games",0,"No."],["Email hosting",0,"No."]]}],sims:["Sign up for a free Salesforce Developer org","Create a custom object + a record","Build one Flow"],cv:"Built in a Salesforce Developer org: custom object, records and a Flow."},
+"Adobe AEM":{ico:"<p",what:"Adobe Experience Manager — enterprise CMS + DAM for large content sites.",who:"Enterprise content, marketing tech",concepts:["Pages, components, templates","Authoring vs publish","DAM (digital asset management)","Content fragments","Sites vs Assets"],quiz:[{q:"AEM separates content into&",o:[["Author and Publish environments",1,"Authors edit; publish serves visitors."],["iOS and Android",0,"No."],["Free and paid",0,"No."]]},{q:"The DAM in AEM manages&",o:[["Digital assets (images, videos)",1,"Digital Asset Management."],["Databases",0,"No."],["Payments",0,"No."]]}],sims:["Read AEM's component/template model","Sketch a page built from reusable components","Note author→publish flow for one page"],cv:"Understand AEM authoring model: components, templates, DAM, author/publish."},
+"SAP":{ico:"•",what:"Enterprise resource planning (ERP) — finance, supply chain, HR at scale.",who:"Enterprises, consultants, functional analysts",concepts:["Modules (FI, MM, SD, HR&)","Master data vs transactions","SAP Fiori (modern UI)","Configuration vs development","S/4HANA basics"],quiz:[{q:"SAP modules like FI and MM represent&",o:[["Business functions (Finance, Materials)",1,"Functional areas of the ERP."],["Programming languages",0,"No."],["Themes",0,"No."]]},{q:"SAP Fiori is&",o:[["The modern user experience layer",1,"Yes — modern UX over SAP."],["A database",0,"That's HANA."],["A CRM",0,"No."]]}],sims:["Learn what 2 SAP modules do (e.g. FI + MM)","Map a simple business process to modules","Note master-data vs transaction-data"],cv:"Foundational SAP awareness: modules (FI/MM/SD), master data, Fiori, S/4HANA."},
+"ServiceNow":{ico:"•",what:"Enterprise platform for IT service management & workflow automation.",who:"ITSM, enterprise IT, platform devs",concepts:["Incidents, problems, changes","Tables & records","Workflows / Flow Designer","Service catalog","Roles & ACLs"],quiz:[{q:"In ServiceNow, an 'incident' is&",o:[["An unplanned disruption to a service",1,"Core ITSM concept."],["A discount",0,"No."],["A theme",0,"No."]]},{q:"Flow Designer is used to&",o:[["Automate processes without heavy code",1,"Low-code automation."],["Render 3D",0,"No."],["Host email",0,"No."]]}],sims:["Get a free ServiceNow developer instance","Create an incident record","Build a simple flow"],cv:"Built in a ServiceNow dev instance: incident records and a basic flow."}
+};
+var AGENT={
+  unit:'platform', dlname:'zapit_platform_booster.txt',
+  info:{
+    what:"A quick-learn pocket book for enterprise platforms (Shopify, HubSpot, Salesforce, AEM, SAP, ServiceNow): ~30 minutes of theory, a quiz, and hands-on simulations — so you can genuinely say you know it.",
+    why:"Students list platform skills they can't explain in a screening. This gives you real, demonstrable familiarity fast — and a CV line you can defend.",
+    features:["~30-min theory: the concepts that matter","Interactive quiz to test understanding","Hands-on simulation tasks (mostly free sandboxes)","A defensible CV line after you finish","Pick one platform or several"],
+    examples:["Shopify: learn variants + Liquid + apps → set up a dev store","HubSpot: CRM + workflows → build a pipeline","ServiceNow: incidents + Flow Designer in a free dev instance"]
+  },
+  selector:{type:'chips', items:Object.keys(PLAT).map(function(k){return {n:k,ico:PLAT[k].ico};}), multi:true, allLabel:'All Platforms'},
+  report:function(plats){
+    var c=document.getElementById('reports-container');
+    var html='<div class="step-note">Quick-learn book(s) for '+plats.map(function(r){return ZAP.esc(r);}).join(', ')+' &nbsp; '+ZAP.indic('Indicative — verify free-tier availability')+'</div>';
+    
+    html+='<div class="report-panel" id="rpanel-role">';
+    if(plats.length===1){
+      html+=renderPlat(plats[0]);
+    } else {
+      html+='<div class="report-sub-tabs">';
+      plats.forEach(function(pn,i){
+        html+='<button class="rsub'+(i===0?' active':'')+'" onclick="switchRoleTab('+i+')">'+ZAP.esc(pn)+'</button>';
+      });
+      html+='</div>';
+      plats.forEach(function(pn,i){
+        html+='<div class="role-panel'+(i===0?' active':'')+'" id="rp-'+i+'">';
+        html+=renderPlat(pn);
+        html+='</div>';
+      });
+    }
+    html+='</div>';
+    
+    html+=ZAP.closeout(RECS, {href:'05_resumekit.html',label:'Agent 05 · Resume Kit',desc:'Finished a platform? Add the CV line and project to your profile package.'}, ['Do <b>theory → quiz → simulation</b> before claiming a platform.','Use the <b>free developer sandboxes</b> so it\'s real, not just read.','Only add the <b>CV line</b> once you can explain the concepts and show what you built.']);
+    c.innerHTML=html;
+  }
+};
+function renderPlat(pn){
+  var d=PLAT[pn]; if(!d) return '';
+  var theory='<h4 class="micro" style="margin-top:0">WHAT IT IS</h4><p style="font-size:13px;color:var(--slate)">'+ZAP.esc(d.what)+'</p><h4 class="micro" style="margin-top:8px">WHO USES IT</h4><p style="font-size:13px;color:var(--slate)">'+ZAP.esc(d.who)+'</p><h4 class="micro" style="margin-top:8px">CORE CONCEPTS (30-MIN)</h4><ul class="checklist">'+d.concepts.map(function(x){return '<li><span class="chk"></span><span>'+ZAP.esc(x)+'</span></li>';}).join('')+'</ul>';
+  var quiz=d.quiz.map(function(q){
+    return '<div class="quiz-q"><div class="qq-text">'+ZAP.esc(q.q)+'</div>'+q.o.map(function(o){return '<button class="quiz-opt"'+(o[1]?' data-correct="1"':'')+' data-exp="'+ZAP.esc(o[2])+'">'+ZAP.esc(o[0])+'</button>';}).join('')+'<div class="quiz-feedback"></div></div>';
+  }).join('');
+  var sims='<h4 class="micro" style="margin-top:0">HANDS-ON SIMULATION TASKS (Mostly Free)</h4><ul class="checklist">'+d.sims.map(function(x){return '<li><span class="chk"></span><span>'+ZAP.esc(x)+'</span></li>';}).join('')+'</ul>';
+  var cv='<div class="artifact-box" style="margin-top:0"><div class="ab-label">– PUT THIS ON YOUR CV (after finishing)</div><div class="ab-title">'+ZAP.esc(d.cv)+'</div><div class="ab-desc">Only claim it once you\'ve done the simulations and can explain the concepts.</div></div>';
+
+  var verdict = '<div class="verdict-col">' +
+    '<div class="verdict-hero vh-green">' +
+      '<div class="vh-lbl">PLATFORM BOOSTER</div>' +
+      '<div class="vh-val">' + ZAP.esc(pn) + '</div>' +
+      '<div class="vh-sub">' + ZAP.esc(d.what) + '</div>' +
+    '</div>' +
+  '</div>';
+  
+  var kpis = ZAP.kpiRow([
+    {lbl:'WHAT IT IS', val:pn, sub:d.who, cls:'demand'},
+    {lbl:'TIME TO LEARN', val:'~30 Min', sub:'theory + quiz + sim', cls:'pos'},
+    {lbl:'CONCEPTS', val:d.concepts.length+' Core', sub:'ideas to master', cls:'trend'},
+    {lbl:'PRACTICE', val:d.sims.length+' Sims', sub:'hands-on tasks', cls:'violet'}
+  ]);
+  
+  var cvLine = '<div class="sample-resume" style="margin:0"><h5>CV LINE PREVIEW</h5>"' + ZAP.esc(d.cv) + '"</div>';
+  var bento = '<div class="bento-snapshot">' + verdict + '<div class="data-col">' + kpis + cvLine + '</div></div>';
+
+  var id = pn.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
+  var deepDive = '<div class="deep-dive">' +
+    '<aside class="sidebar-nav">' +
+      '<button class="s-tab active" onclick="switchSTab(this, \''+id+'-theory\')">📚 Theory &amp; Concepts</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-quiz\')">📝 Interactive Quiz</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-sims\')">🖥️ Simulation Tasks</button>' +
+      '<button class="s-tab" onclick="switchSTab(this, \''+id+'-cv\')">📄 Put on CV</button>' +
+    '</aside>' +
+    '<div class="sidebar-content">' +
+      '<div class="s-panel active" id="'+id+'-theory">' +
+        theory +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-quiz">' +
+        '<h4 class="micro" style="margin-top:0">KNOWLEDGE CHECK</h4>' + quiz +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-sims">' +
+        sims +
+      '</div>' +
+      '<div class="s-panel" id="'+id+'-cv">' +
+        cv +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  return '<div class="role-report" style="border:0;padding:0;">'+
+    '<h2 class="sec" style="margin:16px 0 10px">'+ZAP.esc(pn)+' → 10X Booster</h2>'+
+    bento +
+    deepDive +
+    '</div>';
+}
+window.switchRoleTab=function(idx){
+  document.querySelectorAll('.role-panel').forEach(function(p,i){ p.classList.toggle('active',i===idx); });
+  document.querySelectorAll('.rsub').forEach(function(b,i){ b.classList.toggle('active',i===idx); });
+};
+window.switchSTab=function(btn,id){
+  var nav=btn.parentNode;
+  var content=nav.nextElementSibling;
+  nav.querySelectorAll('.s-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  content.querySelectorAll('.s-panel').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById(id); if(t) t.classList.add('active');
+};
+var RECS=[
+  {t:"Do theory → quiz → simulation before claiming a platform",b:"Thirty minutes of structured learning plus a sandbox task makes the CV line defensible."},
+  {t:"Use the free developer sandboxes",b:"Salesforce, ServiceNow, Shopify and HubSpot offer free tiers — use them so you have real, demonstrable experience."},
+  {t:"Only add the CV line after the simulations",b:"Claim it when you can explain the core concepts and show what you built — not before."}
+];
+
+/* ---- standard boot (identical across agents) ---- */
+(function(){
+  if(AGENT.info) ZAP.mountInfo('info', AGENT.info);
+  var s=AGENT.selector||{type:'roles',multi:true};
+  // chaining: restore role selection carried from a previous role-based agent
+  var restore=[];
+  if(s.type==='roles'){ var saved=ZAP.recall('roles'); if(saved&&saved.length){ restore=saved; ZAP.carryBanner('carryBanner', saved); } }
+  if(s.type==='roles') ZAP.mountRoles('roleGrid', {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel, restore:restore});
+  else ZAP.mountChips('roleGrid', s.items||[], {multi:s.multi!==false, all:s.all!==false, allLabel:s.allLabel});
+  // prefill resume textarea if one exists and we have remembered resume text
+  var rt=document.getElementById('resumeText'); var savedResume=ZAP.recall('resume');
+  if(rt&&savedResume&&!rt.value) rt.value=savedResume;
+  // copt (Step 2) selection
+  document.addEventListener('click', function(e){
+    var o=e.target.closest && e.target.closest('.copt');
+    if(o){ var g=o.parentNode; g.querySelectorAll('.copt').forEach(function(x){x.classList.remove('active');}); o.classList.add('active'); }
+  });
+  window.optVal=function(id){ var e=document.querySelector('#'+id+' .copt.active'); return e?e.textContent.trim():''; };
+  function run(){
+    var sel=ZAP.selected('roleGrid');
+    if(!sel.length){ alert('Please select at least one '+(AGENT.unit||'role')+' first.'); return; }
+    // chaining: remember role selection + any resume text for the next agent
+    if(s.type==='roles'){ ZAP.remember('roles', sel); ZAP.remember('role', sel[0]); }
+    var rtx=document.getElementById('resumeText'); if(rtx&&rtx.value&&rtx.value.replace(/\s/g,'').length>40) ZAP.remember('resume', rtx.value);
+    ZAP.showReport();
+    AGENT.report(sel);
+    var dl=document.getElementById('dl-btn');
+    if(dl) dl.onclick=function(){ ZAP.download(AGENT.dlname||'zapit_report.txt', AGENT.dltext?AGENT.dltext(sel):JSON.stringify(sel)); };
+  }
+  document.getElementById('run-btn').addEventListener('click', run);
+})();
+</script>
+</body>
+</html>
